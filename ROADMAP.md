@@ -83,5 +83,6 @@ Done when: every colleague has logged in on their phone and a nightly backup exi
 - 2026-11-04: UI language is **English**.
 - 2026-11-04: Custom user model with **email as login**, created before the first migration.
 - 2026-11-04: **Methode is fixed per exercise** (`Exercise.method`, 1 or 2), not chosen per session. Milestone 1 only stores it; the plan logic it drives comes later.
+- 2026-11-05: `SessionExercise.method` stores a snapshot of the exercise's Methode at logging time, so history stays correct if the coach changes an exercise's Methode.
 - 2026-11-04: Sessions have no title. They are labelled by their categories.
 - Open: exact rules of Methode 1 and 2.

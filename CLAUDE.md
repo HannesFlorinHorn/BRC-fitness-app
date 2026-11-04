@@ -27,8 +27,8 @@ All primary keys of Session, SessionExercise and ExerciseSet are UUIDs (cheap no
 - `User` (custom, in `accounts`): email is the login field. Created before the first migration so it never has to be swapped later.
 - `Category`: name (seed data: legs, arms, core)
 - `Exercise` (catalog): name (unique), category, method (1 or 2). Managed in the admin. Athletes pick from this list rather than typing free text, so progress data stays clean. The method is fixed per exercise and set by the owner/coach; athletes never choose it.
-- `Session`: athlete (FK to user), date, categories (many-to-many to Category), notes. A session has no title; its label is built from its categories (e.g. "Legs · Core").
-- `SessionExercise`: session, exercise, order
+- `Session`: athlete (FK to user), date, categories (many-to-many to Category), notes, created_at, finished_at (empty while the session is still running). A session has no title; its label is built from its categories (e.g. "Legs · Core").
+- `SessionExercise`: session, exercise, order, method. `method` is a snapshot copied automatically from the exercise when it is logged (never chosen by the athlete), so changing a catalog exercise's Methode does not rewrite past sessions.
 - `ExerciseSet`: session_exercise, number, weight_kg (decimal), reps (positive integer)
 
 Do not name a model `Set` (it clashes with Python's `set`).

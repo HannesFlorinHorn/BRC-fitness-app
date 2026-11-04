@@ -70,6 +70,9 @@ class SessionExercise(models.Model):
     session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name="exercises")
     exercise = models.ForeignKey(Exercise, on_delete=models.PROTECT, related_name="session_exercises")
     order = models.PositiveSmallIntegerField()
+    # Copied from the catalog when the exercise is logged, so changing an
+    # exercise's Methode later does not rewrite past sessions.
+    method = models.PositiveSmallIntegerField(choices=Exercise.Method.choices, editable=False)
 
     class Meta:
         ordering = ["order"]
@@ -79,6 +82,11 @@ class SessionExercise(models.Model):
 
     def __str__(self):
         return f"{self.order}. {self.exercise}"
+
+    def save(self, *args, **kwargs):
+        if self.method is None:
+            self.method = self.exercise.method
+        super().save(*args, **kwargs)
 
 
 class ExerciseSet(models.Model):
