@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# Secrets and data: never commit
+.env
+db.sqlite3
+db.sqlite3-journal
+*.sqlite3
+backups/
+*.bak
+
+# Static collection output
+staticfiles/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
