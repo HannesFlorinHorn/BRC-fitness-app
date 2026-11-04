@@ -1,9 +1,10 @@
 from decimal import Decimal
 
 import pytest
+from django.db import IntegrityError
 
 from accounts.models import User
-from training.models import Category, Exercise, ExerciseSet, Session, SessionExercise
+from training.models import Category, Exercise, ExerciseSet, Plan, PlanExercise, Session, SessionExercise
 from training.services import add_exercise, finish_session, start_session
 
 
@@ -24,17 +25,25 @@ def arms():
 
 @pytest.fixture
 def squat(legs):
-    return Exercise.objects.create(name="Back squat", category=legs, method=1, position=1)
+    return Exercise.objects.create(name="Back squat", category=legs, method=1)
 
 
 @pytest.fixture
 def lunge(legs):
-    return Exercise.objects.create(name="Lunge", category=legs, method=2, position=2)
+    return Exercise.objects.create(name="Lunge", category=legs, method=2)
 
 
 @pytest.fixture
 def curl(arms):
-    return Exercise.objects.create(name="Biceps curl", category=arms, method=1, position=1)
+    return Exercise.objects.create(name="Biceps curl", category=arms, method=1)
+
+
+@pytest.fixture
+def leg_plan(squat, lunge):
+    plan = Plan.objects.get(name="Legs", owner=None)
+    PlanExercise.objects.create(plan=plan, exercise=squat, position=1)
+    PlanExercise.objects.create(plan=plan, exercise=lunge, position=2)
+    return plan
 
 
 def exercise_names(session):
@@ -57,12 +66,12 @@ def test_session_exercise_keeps_method_when_catalog_changes(athlete, squat):
 
 
 @pytest.mark.django_db
-def test_start_session_preloads_active_plan_exercises_in_template_order(athlete, legs, squat, lunge):
-    Exercise.objects.create(name="Leg press", category=legs, method=1, position=0, is_active=False)
-    squat.position = 3
-    squat.save()
+def test_start_session_preloads_active_plan_exercises_in_plan_order(athlete, legs, leg_plan, squat):
+    retired = Exercise.objects.create(name="Leg press", category=legs, method=1, is_active=False)
+    PlanExercise.objects.create(plan=leg_plan, exercise=retired, position=0)
+    leg_plan.plan_exercises.filter(exercise=squat).update(position=3)
 
-    session = start_session(athlete, legs)
+    session = start_session(athlete, leg_plan)
 
     assert exercise_names(session) == ["Lunge", "Back squat"]
     assert [se.order for se in session.exercises.all()] == [1, 2]
@@ -81,8 +90,8 @@ def test_mixed_session_starts_empty_and_takes_exercises_from_any_plan(athlete, s
 
 
 @pytest.mark.django_db
-def test_swap_order_within_session(athlete, legs, squat, lunge):
-    session = start_session(athlete, legs)
+def test_swap_order_within_session(athlete, leg_plan):
+    session = start_session(athlete, leg_plan)
     first, second = session.exercises.all()
 
     first.swap_order_with(second)
@@ -91,17 +100,17 @@ def test_swap_order_within_session(athlete, legs, squat, lunge):
 
 
 @pytest.mark.django_db
-def test_cannot_swap_with_exercise_of_another_session(athlete, legs, squat):
-    one = start_session(athlete, legs).exercises.get()
-    other = start_session(athlete, legs).exercises.get()
+def test_cannot_swap_with_exercise_of_another_session(athlete, leg_plan):
+    one = start_session(athlete, leg_plan).exercises.first()
+    other = start_session(athlete, leg_plan).exercises.first()
 
     with pytest.raises(ValueError):
         one.swap_order_with(other)
 
 
 @pytest.mark.django_db
-def test_finish_drops_skipped_exercises_and_label_follows_what_was_done(athlete, legs, squat, lunge, curl):
-    session = start_session(athlete, legs)
+def test_finish_drops_skipped_exercises_and_label_follows_what_was_done(athlete, leg_plan, squat, curl):
+    session = start_session(athlete, leg_plan)
     done = session.exercises.get(exercise=squat)
     ExerciseSet.objects.create(session_exercise=done, number=1, weight_kg=Decimal("60"), reps=8)
     extra = add_exercise(session, curl)
@@ -112,3 +121,32 @@ def test_finish_drops_skipped_exercises_and_label_follows_what_was_done(athlete,
     assert session.is_finished
     assert exercise_names(session) == ["Back squat", "Biceps curl"]
     assert session.label == "Legs · Arms"
+
+
+@pytest.mark.django_db
+def test_same_exercise_can_be_in_several_plans(athlete, leg_plan, squat, curl):
+    own = Plan.objects.create(name="My full body", owner=athlete)
+    PlanExercise.objects.create(plan=own, exercise=curl, position=1)
+    PlanExercise.objects.create(plan=own, exercise=squat, position=2)
+
+    assert set(squat.plans.all()) == {leg_plan, own}
+    assert exercise_names(start_session(athlete, own)) == ["Biceps curl", "Back squat"]
+
+
+@pytest.mark.django_db
+def test_athletes_see_club_plans_and_only_their_own_plans(athlete):
+    other = User.objects.create_user(email="b@example.com", password="pw")
+    mine = Plan.objects.create(name="Mine", owner=athlete)
+    theirs = Plan.objects.create(name="Theirs", owner=other)
+
+    visible = set(Plan.objects.visible_to(athlete).values_list("name", flat=True))
+    assert visible == {"Legs", "Arms", "Core", "Mine"}
+    assert list(Plan.objects.owned_by(athlete)) == [mine]
+    assert theirs not in Plan.objects.visible_to(athlete)
+
+
+@pytest.mark.django_db
+def test_club_plan_names_are_unique_but_athletes_may_reuse_them(athlete):
+    Plan.objects.create(name="Legs", owner=athlete)
+    with pytest.raises(IntegrityError):
+        Plan.objects.create(name="Legs", owner=None)

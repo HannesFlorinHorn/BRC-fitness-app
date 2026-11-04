@@ -25,8 +25,10 @@ Django REST Framework, React, Vite, TypeScript, Tailwind build, service worker, 
 All primary keys of Session, SessionExercise and ExerciseSet are UUIDs (cheap now, and it prevents duplicate uploads if offline sync is added later).
 
 - `User` (custom, in `accounts`): email is the login field. Created before the first migration so it never has to be swapped later.
-- `Category`: name (seed data: legs, arms, core). Each category is also a **training plan**: its active exercises in `position` order are the template a new session starts from. The coach edits plans in the admin (category page).
-- `Exercise` (catalog): name (unique), category, method (1 or 2), position (order within its plan), is_active. Logged exercises are never deleted; the coach deactivates them instead. Managed in the admin. Athletes pick from this list rather than typing free text, so progress data stays clean. The method is fixed per exercise and set by the owner/coach; athletes never choose it.
+- `Category`: name (seed data: legs, arms, core). The muscle group of an exercise; used to label sessions and group the exercise picker. Not a plan.
+- `Exercise` (catalog): name (unique), category, method (1 or 2), is_active. Logged exercises are never deleted; the coach deactivates them instead. Managed in the admin. Athletes pick from this list rather than typing free text, so progress data stays clean. The method is fixed per exercise and set by the owner/coach; athletes never choose it.
+- `Plan` (session template): name, owner (FK to user; empty = club plan), is_active. Club plans (seed: Legs, Arms, Core) are maintained by the coach in the admin; athletes can build their own. Read plans with `Plan.objects.visible_to(user)` and edit only `Plan.objects.owned_by(user)`.
+- `PlanExercise`: plan, exercise, position. The same exercise can appear in any number of plans.
 - `Session`: athlete (FK to user), date, notes, created_at, finished_at (empty while the session is still running). No stored categories and no title: the label is derived from the categories of its exercises (e.g. "Legs · Arms").
 - `SessionExercise`: session, exercise, order (athletes may swap it), method. `method` is a snapshot copied automatically from the exercise when it is logged (never chosen by the athlete), so changing a catalog exercise's Methode does not rewrite past sessions.
 - `ExerciseSet`: session_exercise, number, weight_kg (decimal), reps (positive integer)
@@ -35,7 +37,7 @@ Do not name a model `Set` (it clashes with Python's `set`).
 
 ## Roles and permissions
 
-- Athlete: sees and edits only their own sessions. Every athlete-facing query must filter by `request.user`. Never fetch a Session, SessionExercise or ExerciseSet by id alone.
+- Athlete: sees and edits only their own sessions. Every athlete-facing query must filter by `request.user`. Never fetch a Session, SessionExercise, ExerciseSet or Plan by id alone. Athletes can read club plans but not change them.
 - Coach: staff user. In Milestone 1 the coach reads everything through the Django admin. No coach pages yet.
 - The coach is read-only in athlete pages. Only the owner changes roles, in the admin.
 - Keep at least one automated test proving that athlete A cannot read, edit or delete athlete B's data (page and direct-URL access). Run it before every commit.
@@ -65,7 +67,7 @@ SQLite backup (safe while the app runs): `sqlite3 db.sqlite3 ".backup 'backup.sq
 - Never commit secrets, `.env`, `db.sqlite3` or backups.
 - `DEBUG`, `SECRET_KEY`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS` and cookie security flags all come from the environment. Defaults must be safe for production, and local development overrides them in `.env`.
 - Mobile first: design for a 390 px wide phone, one-handed use, tap targets of at least 48 px, number inputs with `inputmode="decimal"` for weight and `inputmode="numeric"` for reps.
-- Starting a session: the athlete picks a plan (legs, arms, core), which preloads its exercises, or "mixed", which starts empty. Exercises from any plan can be added and the order swapped. Finishing removes preloaded exercises without sets. The logic lives in `training/services.py`.
+- Starting a session: the athlete picks a plan (club or their own), which preloads its active exercises in plan order, or "free", which starts empty. Exercises from any plan can be added and the order swapped. Finishing removes preloaded exercises without sets. The logic lives in `training/services.py`.
 - Logging flow: after each saved set, show the form again prefilled with the previous set's weight and reps.
 - Keep the UI simple. A boring page that works beats a clever one.
 

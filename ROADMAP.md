@@ -11,11 +11,11 @@ How to use this file: work on the current milestone only, tick items off when do
 Goal: login, record a session, review history, running on the owner's machine.
 
 - [ ] Create the repo, Django project (`config/`) and app (`training/`), `requirements.txt`, `.env.example`, `.gitignore` (including `.env`, `db.sqlite3`, backups)
-- [x] Models and migrations: custom User (email login), Category (= plan), Exercise (with method 1/2, plan position, active flag), Session, SessionExercise, ExerciseSet (UUID keys)
+- [x] Models and migrations: custom User (email login), Category, Exercise (with method 1/2, active flag), Plan + PlanExercise, Session, SessionExercise, ExerciseSet (UUID keys)
 - [x] Admin: all models registered, exercise catalog editable, sessions viewable by staff
-- [ ] Seed data: categories (legs, arms, core) and the real exercise list with each exercise's Methode (ask the owner for the list once the models exist)
+- [ ] Seed data: categories (legs, arms, core), club plans (Legs, Arms, Core) and the real exercise list with each exercise's Methode and plan order (ask the owner for the list)
 - [ ] Login and logout pages, login required for everything else
-- [ ] Pages: start session from a plan (legs/arms/core preloads its exercises) or mixed, add exercise from catalog, swap exercise order, add sets (prefilled from the previous set), delete last set, finish (skipped exercises are dropped)
+- [ ] Pages: start session from a plan (preloads its exercises) or free, add exercise from catalog, swap exercise order, add sets (prefilled from the previous set), delete last set, finish (skipped exercises are dropped)
 - [ ] Pages: history list and session detail (own data only)
 - [ ] Design tokens from `docs/design/DESIGN.md` applied via `custom.css` on top of Pico.css
 - [ ] Tests: permission test (athlete A vs B), a model test, and one test of the full logging flow
@@ -86,4 +86,6 @@ Done when: every colleague has logged in on their phone and a nightly backup exi
 - 2026-11-05: `SessionExercise.method` stores a snapshot of the exercise's Methode at logging time, so history stays correct if the coach changes an exercise's Methode.
 - 2026-11-04: Sessions have no title. They are labelled by their categories.
 - 2026-11-05: **Categories are the training plans** (fixed templates, editable by the coach in the admin). Starting a session from a plan preloads its active exercises in order; athletes may add exercises from other plans and swap the order. `Session.categories` was removed: a session's categories are derived from its exercises.
+- 2026-11-05: **Plans are their own model**, replacing "categories are plans" from earlier the same day. Club plans have no owner and are edited by the coach in the admin; athletes can own private plans. An exercise can be in several plans. Category is only the muscle group again.
 - Open: exact rules of Methode 1 and 2.
+- Open: when athletes get a page to build their own plans (model is ready; until then plans are created in the admin).

@@ -7,8 +7,8 @@ from django.utils import timezone
 
 
 class Category(models.Model):
-    """A training plan (legs, arms, core). Its active exercises, in position
-    order, are the template a new session starts from."""
+    """Muscle group of an exercise (legs, arms, core). Used to label sessions
+    and group the exercise picker; plans are separate (see Plan)."""
 
     name = models.CharField(max_length=50, unique=True)
 
@@ -32,15 +32,69 @@ class Exercise(models.Model):
     name = models.CharField(max_length=100, unique=True)
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="exercises")
     method = models.PositiveSmallIntegerField(choices=Method.choices)
-    position = models.PositiveSmallIntegerField(help_text="Order of this exercise in its plan template.")
     # Exercises are never deleted once logged; the coach deactivates them instead.
     is_active = models.BooleanField(default=True, help_text="Inactive exercises are hidden when logging.")
 
     class Meta:
-        ordering = ["category__name", "position", "name"]
+        ordering = ["category__name", "name"]
 
     def __str__(self):
         return self.name
+
+
+class PlanQuerySet(models.QuerySet):
+    def visible_to(self, user):
+        """Club plans plus the user's own plans. Use for reading."""
+        return self.filter(models.Q(owner__isnull=True) | models.Q(owner=user))
+
+    def owned_by(self, user):
+        """Only the user's own plans. Use for editing; club plans are changed by the coach in the admin."""
+        return self.filter(owner=user)
+
+
+class Plan(models.Model):
+    """A session template: an ordered list of exercises. Club plans have no
+    owner and are maintained by the coach; athletes can also build their own."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="plans",
+        help_text="Leave empty for a club plan everyone can use.",
+    )
+    is_active = models.BooleanField(default=True, help_text="Inactive plans cannot be started.")
+    exercises = models.ManyToManyField(Exercise, through="PlanExercise", related_name="plans")
+
+    objects = PlanQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["name"]
+        constraints = [
+            models.UniqueConstraint(fields=["owner", "name"], name="unique_plan_name_per_owner"),
+            models.UniqueConstraint(
+                fields=["name"], condition=models.Q(owner__isnull=True), name="unique_club_plan_name"
+            ),
+        ]
+
+    def __str__(self):
+        return self.name if self.owner_id is None else f"{self.name} ({self.owner})"
+
+
+class PlanExercise(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    plan = models.ForeignKey(Plan, on_delete=models.CASCADE, related_name="plan_exercises")
+    exercise = models.ForeignKey(Exercise, on_delete=models.CASCADE, related_name="plan_exercises")
+    position = models.PositiveSmallIntegerField()
+
+    class Meta:
+        ordering = ["position"]
+
+    def __str__(self):
+        return f"{self.plan}: {self.position}. {self.exercise}"
 
 
 class Session(models.Model):

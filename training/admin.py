@@ -1,29 +1,36 @@
 from django.contrib import admin
 
-from .models import Category, Exercise, ExerciseSet, Session, SessionExercise
-
-
-class PlanExerciseInline(admin.TabularInline):
-    """Edit a plan template in one place: its exercises, their order and Methode."""
-
-    model = Exercise
-    fields = ("position", "name", "method", "is_active")
-    ordering = ("position", "name")
-    extra = 0
+from .models import Category, Exercise, ExerciseSet, Plan, PlanExercise, Session, SessionExercise
 
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     search_fields = ("name",)
-    inlines = [PlanExerciseInline]
 
 
 @admin.register(Exercise)
 class ExerciseAdmin(admin.ModelAdmin):
-    list_display = ("name", "category", "position", "method", "is_active")
-    list_editable = ("position", "is_active")
+    list_display = ("name", "category", "method", "is_active")
+    list_editable = ("is_active",)
     list_filter = ("category", "method", "is_active")
     search_fields = ("name",)
+
+
+class PlanExerciseInline(admin.TabularInline):
+    """Edit a plan in one place: its exercises and their order."""
+
+    model = PlanExercise
+    fields = ("position", "exercise")
+    autocomplete_fields = ("exercise",)
+    extra = 1
+
+
+@admin.register(Plan)
+class PlanAdmin(admin.ModelAdmin):
+    list_display = ("name", "owner", "is_active")
+    list_filter = ("is_active", ("owner", admin.EmptyFieldListFilter))
+    search_fields = ("name",)
+    inlines = [PlanExerciseInline]
 
 
 class ExerciseSetInline(admin.TabularInline):

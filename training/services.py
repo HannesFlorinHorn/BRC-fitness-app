@@ -7,18 +7,20 @@ functions never look anything up by id.
 from django.db import transaction
 from django.utils import timezone
 
-from .models import Exercise, Session, SessionExercise
+from .models import Session, SessionExercise
 
 
 @transaction.atomic
 def start_session(athlete, plan=None):
-    """Create a session, preloaded with the plan's active exercises in
-    template order. Without a plan (mixed training) it starts empty."""
+    """Create a session, preloaded with the plan's active exercises in plan
+    order. Without a plan (free training) it starts empty.
+
+    The plan must come from Plan.objects.visible_to(athlete)."""
     session = Session.objects.create(athlete=athlete)
     if plan is not None:
-        exercises = Exercise.objects.filter(category=plan, is_active=True).order_by("position", "name")
-        for order, exercise in enumerate(exercises, start=1):
-            SessionExercise.objects.create(session=session, exercise=exercise, order=order)
+        entries = plan.plan_exercises.filter(exercise__is_active=True).select_related("exercise")
+        for order, entry in enumerate(entries.order_by("position"), start=1):
+            SessionExercise.objects.create(session=session, exercise=entry.exercise, order=order)
     return session
 
 
