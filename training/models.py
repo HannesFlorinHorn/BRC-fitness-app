@@ -2,11 +2,14 @@ import uuid
 
 from django.conf import settings
 from django.core.validators import MinValueValidator
-from django.db import models
+from django.db import models, transaction
 from django.utils import timezone
 
 
 class Category(models.Model):
+    """A training plan (legs, arms, core). Its active exercises, in position
+    order, are the template a new session starts from."""
+
     name = models.CharField(max_length=50, unique=True)
 
     class Meta:
@@ -29,9 +32,12 @@ class Exercise(models.Model):
     name = models.CharField(max_length=100, unique=True)
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="exercises")
     method = models.PositiveSmallIntegerField(choices=Method.choices)
+    position = models.PositiveSmallIntegerField(help_text="Order of this exercise in its plan template.")
+    # Exercises are never deleted once logged; the coach deactivates them instead.
+    is_active = models.BooleanField(default=True, help_text="Inactive exercises are hidden when logging.")
 
     class Meta:
-        ordering = ["category__name", "name"]
+        ordering = ["category__name", "position", "name"]
 
     def __str__(self):
         return self.name
@@ -43,7 +49,6 @@ class Session(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="training_sessions"
     )
     date = models.DateField(default=timezone.localdate)
-    categories = models.ManyToManyField(Category, blank=True, related_name="sessions")
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     finished_at = models.DateTimeField(null=True, blank=True)
@@ -56,8 +61,13 @@ class Session(models.Model):
 
     @property
     def label(self):
-        """Sessions have no title; they are named after their categories."""
-        names = [c.name.capitalize() for c in self.categories.all()]
+        """Sessions have no title; they are named after the categories of
+        their exercises, in the order they were done."""
+        names = []
+        for session_exercise in self.exercises.all():
+            name = session_exercise.exercise.category.name.capitalize()
+            if name not in names:
+                names.append(name)
         return " · ".join(names) or "Session"
 
     @property
@@ -87,6 +97,20 @@ class SessionExercise(models.Model):
         if self.method is None:
             self.method = self.exercise.method
         super().save(*args, **kwargs)
+
+    def swap_order_with(self, other):
+        """Swap positions with another exercise of the same session."""
+        if other.session_id != self.session_id:
+            raise ValueError("Can only swap exercises within one session")
+        mine, theirs = self.order, other.order
+        with transaction.atomic():
+            # Orders start at 1, so 0 is free as a temporary slot for the unique constraint.
+            self.order = 0
+            self.save(update_fields=["order"])
+            other.order = mine
+            other.save(update_fields=["order"])
+            self.order = theirs
+            self.save(update_fields=["order"])
 
 
 class ExerciseSet(models.Model):

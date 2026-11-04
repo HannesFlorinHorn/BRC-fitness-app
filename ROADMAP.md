@@ -11,11 +11,11 @@ How to use this file: work on the current milestone only, tick items off when do
 Goal: login, record a session, review history, running on the owner's machine.
 
 - [ ] Create the repo, Django project (`config/`) and app (`training/`), `requirements.txt`, `.env.example`, `.gitignore` (including `.env`, `db.sqlite3`, backups)
-- [ ] Models and migrations: custom User (email login), Category, Exercise (with method 1/2), Session, SessionExercise, ExerciseSet (UUID keys)
-- [ ] Admin: all models registered, exercise catalog editable, sessions viewable by staff
+- [x] Models and migrations: custom User (email login), Category (= plan), Exercise (with method 1/2, plan position, active flag), Session, SessionExercise, ExerciseSet (UUID keys)
+- [x] Admin: all models registered, exercise catalog editable, sessions viewable by staff
 - [ ] Seed data: categories (legs, arms, core) and the real exercise list with each exercise's Methode (ask the owner for the list once the models exist)
 - [ ] Login and logout pages, login required for everything else
-- [ ] Pages: start session, add exercise from catalog, add sets (prefilled from the previous set), finish
+- [ ] Pages: start session from a plan (legs/arms/core preloads its exercises) or mixed, add exercise from catalog, swap exercise order, add sets (prefilled from the previous set), delete last set, finish (skipped exercises are dropped)
 - [ ] Pages: history list and session detail (own data only)
 - [ ] Design tokens from `docs/design/DESIGN.md` applied via `custom.css` on top of Pico.css
 - [ ] Tests: permission test (athlete A vs B), a model test, and one test of the full logging flow
@@ -85,4 +85,5 @@ Done when: every colleague has logged in on their phone and a nightly backup exi
 - 2026-11-04: **Methode is fixed per exercise** (`Exercise.method`, 1 or 2), not chosen per session. Milestone 1 only stores it; the plan logic it drives comes later.
 - 2026-11-05: `SessionExercise.method` stores a snapshot of the exercise's Methode at logging time, so history stays correct if the coach changes an exercise's Methode.
 - 2026-11-04: Sessions have no title. They are labelled by their categories.
+- 2026-11-05: **Categories are the training plans** (fixed templates, editable by the coach in the admin). Starting a session from a plan preloads its active exercises in order; athletes may add exercises from other plans and swap the order. `Session.categories` was removed: a session's categories are derived from its exercises.
 - Open: exact rules of Methode 1 and 2.
