@@ -55,6 +55,7 @@ Done when: every colleague has logged in on their phone and a nightly backup exi
 - [ ] Coach overview page (athletes, last session, consistency) instead of the admin
 - [ ] Edit and delete sessions, exercise catalog page, CSV export
 - [ ] Training plan logic for Methode 1 and 2: target reps per set and suggested weight progression (rules to be written down by the owner first)
+- [ ] "My plans" page: athletes create their own plans, add and reorder exercises (model exists since 1.1; until then plans are created in the admin)
 - [ ] More tests, especially for permissions
 
 ## Milestone 3: phone polish
@@ -88,4 +89,4 @@ Done when: every colleague has logged in on their phone and a nightly backup exi
 - 2026-11-05: **Categories are the training plans** (fixed templates, editable by the coach in the admin). Starting a session from a plan preloads its active exercises in order; athletes may add exercises from other plans and swap the order. `Session.categories` was removed: a session's categories are derived from its exercises.
 - 2026-11-05: **Plans are their own model**, replacing "categories are plans" from earlier the same day. Club plans have no owner and are edited by the coach in the admin; athletes can own private plans. An exercise can be in several plans. Category is only the muscle group again.
 - Open: exact rules of Methode 1 and 2.
-- Open: when athletes get a page to build their own plans (model is ready; until then plans are created in the admin).
+- 2026-11-05: The athlete page for building own plans moves to **Milestone 2**. Until then, plans are created in the admin.
