@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}{{ logged.exercise.name }}{% endblock %}
+{% block heading %}{{ logged.exercise.name }}{% endblock %}
+
+{% block content %}
+  {% if logged.method %}<p class="muted">{{ logged.get_method_display }}</p>{% endif %}
+
+  {% include "training/_sets_table.html" with sets=sets %}
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="set-inputs">
+      <div>
+        <label for="{{ form.weight_kg.id_for_label }}">{{ form.weight_kg.label }}</label>
+        {{ form.weight_kg }}
+        {% for error in form.weight_kg.errors %}<p class="error" role="alert">{{ error }}</p>{% endfor %}
+      </div>
+      <div>
+        <label for="{{ form.reps.id_for_label }}">{{ form.reps.label }}</label>
+        {{ form.reps }}
+        {% for error in form.reps.errors %}<p class="error" role="alert">{{ error }}</p>{% endfor %}
+      </div>
+    </div>
+    <button type="submit">Save set</button>
+  </form>
+
+  {% if next_exercise.exercise.tracking == "sets" %}
+    <a class="button secondary" href="{% url 'training:exercise_sets' next_exercise.pk %}">Next: {{ next_exercise.exercise.name }}</a>
+  {% endif %}
+  <a class="button secondary" href="{% url 'training:session_log' logged.session_id %}">Back to session</a>
+
+  {% if sets %}
+    <form method="post" action="{% url 'training:set_delete_last' logged.pk %}">
+      {% csrf_token %}
+      <button type="submit" class="danger">Delete last set</button>
+    </form>
+  {% endif %}
+{% endblock %}

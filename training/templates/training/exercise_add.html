@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Add exercise{% endblock %}
+{% block heading %}Add exercise{% endblock %}
+
+{% block content %}
+  <form method="post">
+    {% csrf_token %}
+    {% regroup exercises by category.name as categories %}
+    {% for category in categories %}
+      <h2 class="label">{{ category.grouper }}</h2>
+      {% for exercise in category.list %}
+        <button type="submit" name="exercise" value="{{ exercise.pk }}" class="secondary">{{ exercise.name }}</button>
+      {% endfor %}
+    {% endfor %}
+  </form>
+  <a href="{% url 'training:session_log' session.pk %}">Back to session</a>
+{% endblock %}

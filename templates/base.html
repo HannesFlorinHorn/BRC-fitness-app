@@ -28,6 +28,8 @@
       <a href="{% url 'training:history' %}">History</a>
       {% if user.is_staff %}
         <a href="{% url 'admin:index' %}">Admin</a>
+      {% else %}
+        <a href="{% url 'training:start' %}">Session</a>
       {% endif %}
     </nav>
   {% endif %}

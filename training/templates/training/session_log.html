@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Session{% endblock %}
+{% block heading %}Session{% endblock %}
+
+{% block content %}
+  <p class="muted">{{ session.date|date:"l, j F Y" }}</p>
+
+  {% for logged in exercises %}
+    <section class="card card-block">
+      <div class="row">
+        {% if logged.exercise.tracking == "check" %}
+          <form method="post" action="{% url 'training:exercise_tick' logged.pk %}" class="grow">
+            {% csrf_token %}
+            <button type="submit" class="{% if logged.is_done %}tick-done{% else %}tick{% endif %}">
+              {% if logged.is_done %}✓ {% endif %}{{ logged.exercise.name }}
+            </button>
+          </form>
+        {% else %}
+          <a class="grow exercise-link" href="{% url 'training:exercise_sets' logged.pk %}">
+            <strong>{{ logged.exercise.name }}</strong><br>
+            <span class="muted">
+              {% if logged.method %}{{ logged.get_method_display }} · {% endif %}
+              {% for set in logged.sets.all %}{{ set.weight_display }} kg × {{ set.reps }}{% if not forloop.last %}, {% endif %}{% empty %}No sets yet{% endfor %}
+            </span>
+          </a>
+        {% endif %}
+        <div class="move">
+          {% if not forloop.first %}
+            <form method="post" action="{% url 'training:exercise_move' logged.pk 'up' %}">
+              {% csrf_token %}
+              <button type="submit" class="icon" aria-label="Move {{ logged.exercise.name }} up">↑</button>
+            </form>
+          {% endif %}
+          {% if not forloop.last %}
+            <form method="post" action="{% url 'training:exercise_move' logged.pk 'down' %}">
+              {% csrf_token %}
+              <button type="submit" class="icon" aria-label="Move {{ logged.exercise.name }} down">↓</button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+  {% empty %}
+    <p class="muted">No exercises yet.</p>
+  {% endfor %}
+
+  <a class="button secondary" href="{% url 'training:exercise_add' session.pk %}">Add exercise</a>
+
+  <form method="post" action="{% url 'training:session_finish' session.pk %}">
+    {% csrf_token %}
+    <label for="notes">Notes (optional)</label>
+    <textarea id="notes" name="notes" rows="2">{{ session.notes }}</textarea>
+    <button type="submit">Finish session</button>
+  </form>
+{% endblock %}

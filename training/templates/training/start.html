@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}New session{% endblock %}
+{% block heading %}New session{% endblock %}
+
+{% block content %}
+  <form method="post">
+    {% csrf_token %}
+    <label for="{{ form.date.id_for_label }}">Date</label>
+    {{ form.date }}
+    {% for error in form.date.errors %}<p class="error" role="alert">{{ error }}</p>{% endfor %}
+    {% for error in form.plan.errors %}<p class="error" role="alert">{{ error }}</p>{% endfor %}
+
+    <h2 class="label">Choose a plan</h2>
+    {% for plan in plans %}
+      <button type="submit" name="plan" value="{{ plan.pk }}">{{ plan.name }}</button>
+    {% endfor %}
+    <button type="submit" name="plan" value="" class="secondary">Free session</button>
+  </form>
+{% endblock %}

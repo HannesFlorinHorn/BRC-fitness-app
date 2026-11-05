@@ -5,7 +5,7 @@
 
 {% block content %}
   {% if open_session %}
-    <a class="card card-active" href="{% url 'training:session_detail' open_session.pk %}">
+    <a class="card card-active" href="{% url 'training:session_log' open_session.pk %}">
       <strong>{{ open_session.label }}</strong>
       <span class="muted">In progress · {{ open_session.date|date:"j M" }}</span>
     </a>
