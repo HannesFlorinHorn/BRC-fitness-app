@@ -1,0 +1,259 @@
+/* Design tokens from docs/design/DESIGN.md (the color list at the top of the
+   file is the source of truth), applied on top of Pico.css. */
+
+@font-face { font-family: Manrope; font-weight: 400; font-display: swap; src: url("../fonts/manrope-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: Manrope; font-weight: 700; font-display: swap; src: url("../fonts/manrope-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: Inter; font-weight: 800; font-display: swap; src: url("../fonts/inter-latin-800-normal.woff2") format("woff2"); }
+@font-face { font-family: Poppins; font-weight: 600; font-display: swap; src: url("../fonts/poppins-latin-600-normal.woff2") format("woff2"); }
+
+/* This selector matches the specificity of Pico's own theme rule, so these win. */
+:root:not([data-theme="dark"]) {
+  --surface: #f9f9ff;
+  --surface-card: #ffffff;
+  --surface-container: #e9edff;
+  --on-surface: #111b30;
+  --muted: #4c5e87;
+  --outline: #d8e2fe;
+  --primary: #ba0022;
+  --primary-pressed: #930019;
+  --on-primary: #ffffff;
+  --secondary-container: #e0e8ff;
+  --on-secondary-container: #111b30;
+  --error: #ba1a1a;
+  --error-container: #ffdad6;
+  --on-error-container: #93000a;
+  --radius: 0.5rem;
+  --radius-lg: 1rem;
+  --tap: 3rem; /* 48 px minimum tap target */
+  --nav-height: 3.5rem;
+
+  --pico-font-family: Manrope, system-ui, sans-serif;
+  --pico-background-color: var(--surface);
+  --pico-color: var(--on-surface);
+  --pico-border-radius: var(--radius);
+  --pico-primary: var(--primary);
+  --pico-primary-hover: var(--primary-pressed);
+  --pico-primary-focus: rgba(186, 0, 34, 0.25);
+  --pico-primary-background: var(--primary);
+  --pico-primary-hover-background: var(--primary-pressed);
+  --pico-primary-border: var(--primary);
+  --pico-primary-hover-border: var(--primary-pressed);
+  --pico-h1-color: var(--on-surface);
+  --pico-h2-color: var(--on-surface);
+}
+
+html { background: var(--surface); }
+
+body {
+  background: var(--surface);
+  color: var(--on-surface);
+  padding-bottom: calc(var(--nav-height) + 1.5rem + env(safe-area-inset-bottom));
+}
+
+main {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Top bar */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 1rem;
+}
+.topbar img { width: 2.75rem; height: auto; }
+.topbar h1 {
+  flex: 1;
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.topbar form { margin: 0; }
+
+/* Buttons */
+button[type="submit"],
+a.button {
+  display: block;
+  width: 100%;
+  min-height: var(--tap);
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-family: Poppins, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-decoration: none;
+}
+button[type="submit"]:hover,
+button[type="submit"]:active { background: var(--primary-pressed); border-color: var(--primary-pressed); }
+
+button[type="submit"].secondary,
+a.button.secondary {
+  border-color: var(--outline);
+  background: var(--secondary-container);
+  color: var(--on-secondary-container);
+}
+button[type="submit"].secondary:hover,
+button[type="submit"].secondary:active { border-color: var(--outline); background: var(--surface-container); }
+
+button[type="submit"].danger {
+  border-color: var(--error);
+  background: var(--error-container);
+  color: var(--on-error-container);
+}
+
+button[type="submit"].link {
+  width: auto;
+  margin: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+button[type="submit"].icon {
+  width: var(--tap);
+  height: var(--tap);
+  margin: 0;
+  padding: 0;
+  border-color: var(--outline);
+  background: var(--secondary-container);
+  color: var(--on-secondary-container);
+  font-size: 1.125rem;
+}
+
+button[type="submit"].tick,
+button[type="submit"].tick-done {
+  margin: 0;
+  text-align: left;
+  font-family: Manrope, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+button[type="submit"].tick { border-color: var(--outline); background: var(--surface-card); color: var(--on-surface); }
+button[type="submit"].tick-done { border-color: var(--on-surface); background: var(--on-surface); color: var(--on-primary); }
+
+/* Inputs */
+input, textarea {
+  min-height: var(--tap);
+  background: var(--surface-card) !important;
+}
+input:focus, textarea:focus {
+  border-color: var(--primary) !important;
+  box-shadow: none !important;
+}
+.set-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.set-inputs input {
+  font-family: Poppins, sans-serif;
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Cards */
+a.card,
+.card {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  min-height: var(--tap);
+  margin-bottom: 0.5rem;
+  padding: 0.875rem;
+  border: 1px solid var(--outline);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  color: var(--on-surface);
+  text-decoration: none;
+}
+.card-block { display: block; }
+.card-block h2 { margin: 0 0 0.5rem; font-size: 1rem; font-weight: 700; }
+.card-block p { margin: 0; }
+.card-block table.sets { margin-bottom: 0; }
+a.card-active { display: block; margin-bottom: 1rem; border: 1.5px solid var(--primary); }
+a.card-active span { display: block; }
+
+.date {
+  flex: none;
+  width: 3.25rem;
+  font-family: Poppins, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.row { display: flex; align-items: center; gap: 0.5rem; }
+.grow { flex: 1; min-width: 0; margin: 0; }
+.exercise-link { color: var(--on-surface); text-decoration: none; }
+.move { display: flex; flex: none; gap: 0.25rem; }
+.move form { margin: 0; }
+
+/* Text */
+.label {
+  margin: 1.25rem 0 0.5rem;
+  color: var(--muted);
+  font-family: Poppins, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.muted { color: var(--muted); font-size: 0.875rem; }
+.error { margin: 0.25rem 0 0.75rem; color: var(--error); font-size: 0.875rem; }
+.message {
+  padding: 0.75rem;
+  border-radius: var(--radius);
+  background: var(--surface-container);
+  font-size: 0.875rem;
+}
+
+/* Sets table */
+table.sets { width: 100%; margin-bottom: 1rem; font-variant-numeric: tabular-nums; }
+table.sets th {
+  color: var(--muted);
+  font-family: Poppins, sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+table.sets th, table.sets td { padding: 0.375rem 0.25rem; background: transparent; }
+table.sets td { font-family: Poppins, sans-serif; font-weight: 600; }
+table.sets th:not(:first-child), table.sets td:not(:first-child) { text-align: right; }
+
+/* Bottom navigation */
+.bottom-nav {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  height: calc(var(--nav-height) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  border-top: 1px solid var(--outline);
+  background: rgba(255, 255, 255, 0.94);
+}
+.bottom-nav a {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  color: var(--on-surface);
+  font-family: Poppins, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.bottom-nav a.primary { background: var(--primary); color: var(--on-primary); }

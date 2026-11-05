@@ -4,9 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Training{% endblock %} · BRC</title>
+  <link rel="icon" href="{% static 'img/logo_fahne.png' %}">
+  <link rel="stylesheet" href="{% static 'css/pico.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/custom.css' %}">
 </head>
 <body>
   <header class="topbar">
+    <img src="{% static 'img/logo_fahne.png' %}" alt="BRC flag">
     <h1>{% block heading %}Training{% endblock %}</h1>
     {% if user.is_authenticated %}
       <form method="post" action="{% url 'logout' %}">
@@ -29,7 +33,7 @@
       {% if user.is_staff %}
         <a href="{% url 'admin:index' %}">Admin</a>
       {% else %}
-        <a href="{% url 'training:start' %}">Session</a>
+        <a class="primary" href="{% url 'training:start' %}">Session</a>
       {% endif %}
     </nav>
   {% endif %}

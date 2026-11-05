@@ -14,11 +14,11 @@ Goal: login, record a session, review history, running on the owner's machine.
 - [x] Models and migrations: custom User (email login), Category, Exercise (with method 1/2, active flag), Plan + PlanExercise, Session, SessionExercise, ExerciseSet (UUID keys)
 - [x] Admin: all models registered, exercise catalog editable, sessions viewable by staff
 - [x] Seed data: categories (legs, arms, core), club plans (Legs, Arms, Core) and the real exercise list with each exercise's Methode and plan order (ask the owner for the list)
-- [ ] Login and logout pages, login required for everything else
-- [ ] Pages: start session from a plan (preloads its exercises) or free, add exercise from catalog, swap exercise order, add sets (prefilled from the previous set), tick "check" exercises as done, delete last set, finish (skipped exercises are dropped)
-- [ ] Pages: history list and session detail (own data only)
-- [ ] Design tokens from `docs/design/DESIGN.md` applied via `custom.css` on top of Pico.css
-- [ ] Tests: permission test (athlete A vs B), a model test, and one test of the full logging flow
+- [x] Login and logout pages, login required for everything else
+- [x] Pages: start session from a plan (preloads its exercises) or free, add exercise from catalog, swap exercise order, add sets (prefilled from the previous set), tick "check" exercises as done, delete last set, finish (skipped exercises are dropped)
+- [x] Pages: history list and session detail (own data only)
+- [x] Design tokens from `docs/design/DESIGN.md` applied via `custom.css` on top of Pico.css
+- [x] Tests: permission test (athlete A vs B), a model test, and one test of the full logging flow
 
 Done when: a full session can be recorded and found again in the history, and the permission test passes.
 
@@ -92,5 +92,6 @@ Done when: every colleague has logged in on their phone and a nightly backup exi
 - 2026-11-06: Session date is prefilled with today and may be changed to a past date, so a session already done can be logged.
 - 2026-11-06: **One open session per athlete.** It finishes itself 4 hours after it was started, on the athlete's next visit. Sessions with nothing logged are discarded.
 - 2026-11-06: The coach has **two accounts**: a normal athlete account to train with and a staff account to see everyone's data in the admin. Staff accounts cannot log sessions.
+- 2026-11-06: In `DESIGN.md`, the color list at the top wins over the text below it (red `#ba0022`, light background). Pico.css and the fonts are stored in `static/`, so pages load nothing from Google or a CDN.
 - Open: exact rules of Methode 1 and 2.
 - 2026-11-05: The athlete page for building own plans moves to **Milestone 2**. Until then, plans are created in the admin.
