@@ -116,6 +116,13 @@ class Session(models.Model):
 
     class Meta:
         ordering = ["-date", "-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["athlete"],
+                condition=models.Q(finished_at__isnull=True),
+                name="one_open_session_per_athlete",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.athlete} · {self.date} · {self.label}"
@@ -191,4 +198,9 @@ class ExerciseSet(models.Model):
         ]
 
     def __str__(self):
-        return f"Set {self.number}: {self.weight_kg} kg × {self.reps}"
+        return f"Set {self.number}: {self.weight_display} kg × {self.reps}"
+
+    @property
+    def weight_display(self):
+        """The weight without trailing zeros: 60, 62.5."""
+        return f"{self.weight_kg:.2f}".rstrip("0").rstrip(".")

@@ -38,8 +38,8 @@ Do not name a model `Set` (it clashes with Python's `set`).
 ## Roles and permissions
 
 - Athlete: sees and edits only their own sessions. Every athlete-facing query must filter by `request.user`. Never fetch a Session, SessionExercise, ExerciseSet or Plan by id alone. Athletes can read club plans but not change them.
-- Coach: staff user. In Milestone 1 the coach reads everything through the Django admin. No coach pages yet.
-- The coach is read-only in athlete pages. Only the owner changes roles, in the admin.
+- Coach: has two accounts. A normal athlete account for their own training, and a staff account that reads everything through the Django admin. No coach pages yet.
+- Staff accounts are read-only in athlete pages: they cannot start or log sessions. Only the owner changes roles, in the admin.
 - Keep at least one automated test proving that athlete A cannot read, edit or delete athlete B's data (page and direct-URL access). Run it before every commit.
 
 ## Commands
@@ -68,6 +68,8 @@ SQLite backup (safe while the app runs): `sqlite3 db.sqlite3 ".backup 'backup.sq
 - `DEBUG`, `SECRET_KEY`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS` and cookie security flags all come from the environment. Defaults must be safe for production, and local development overrides them in `.env`.
 - Mobile first: design for a 390 px wide phone, one-handed use, tap targets of at least 48 px, number inputs with `inputmode="decimal"` for weight and `inputmode="numeric"` for reps.
 - Starting a session: the athlete picks a plan (club or their own), which preloads its active exercises in plan order, or "free", which starts empty. Exercises from any plan can be added and the order swapped. Finishing removes preloaded exercises that have no sets and are not ticked. `check` exercises get a tick, never sets. The logic lives in `training/services.py`.
+- A session's date is prefilled with today and can be set to a past date (never a future one) to log a session already done.
+- Each athlete has at most one open session (enforced by a database constraint). An open session finishes itself 4 hours after it was started; with no background job, this happens on the athlete's next visit (`get_open_session`). A session with nothing logged is discarded when it finishes.
 - Logging flow: after each saved set, show the form again prefilled with the previous set's weight and reps.
 - Keep the UI simple. A boring page that works beats a clever one.
 

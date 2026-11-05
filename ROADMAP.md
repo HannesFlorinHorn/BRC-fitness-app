@@ -1,6 +1,6 @@
 # Roadmap
 
-Last updated: 2026-11-04. Current milestone: **1.1**.
+Last updated: 2026-11-06. Current milestone: **1.1**.
 
 Goal: the training season has already started, so the first priority is a small, reliable app that collects data. Everything fancy comes later.
 
@@ -89,5 +89,8 @@ Done when: every colleague has logged in on their phone and a nightly backup exi
 - 2026-11-05: **Categories are the training plans** (fixed templates, editable by the coach in the admin). Starting a session from a plan preloads its active exercises in order; athletes may add exercises from other plans and swap the order. `Session.categories` was removed: a session's categories are derived from its exercises.
 - 2026-11-05: **Plans are their own model**, replacing "categories are plans" from earlier the same day. Club plans have no owner and are edited by the coach in the admin; athletes can own private plans. An exercise can be in several plans. Category is only the muscle group again.
 - 2026-11-05: Club plans seeded: Legs (Mon), Arms (Wed), Core (Fri), 14 exercises. **Methode is optional** (Planks, Abs have none). Exercises are tracked either as weight × reps or as **tick when done** (Planks, Abs). Variants (plank sides, shoulder directions) are one entry each; athletes know what to do.
+- 2026-11-06: Session date is prefilled with today and may be changed to a past date, so a session already done can be logged.
+- 2026-11-06: **One open session per athlete.** It finishes itself 4 hours after it was started, on the athlete's next visit. Sessions with nothing logged are discarded.
+- 2026-11-06: The coach has **two accounts**: a normal athlete account to train with and a staff account to see everyone's data in the admin. Staff accounts cannot log sessions.
 - Open: exact rules of Methode 1 and 2.
 - 2026-11-05: The athlete page for building own plans moves to **Milestone 2**. Until then, plans are created in the admin.
