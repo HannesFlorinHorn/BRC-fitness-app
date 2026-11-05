@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}History{% endblock %}
+{% block heading %}History{% endblock %}
+
+{% block content %}
+  {% if open_session %}
+    <a class="card card-active" href="{% url 'training:session_detail' open_session.pk %}">
+      <strong>{{ open_session.label }}</strong>
+      <span class="muted">In progress · {{ open_session.date|date:"j M" }}</span>
+    </a>
+  {% endif %}
+
+  {% regroup sessions by date|date:"F Y" as months %}
+  {% for month in months %}
+    <h2 class="label">{{ month.grouper }}</h2>
+    {% for session in month.list %}
+      <a class="card" href="{% url 'training:session_detail' session.pk %}">
+        <span class="date">{{ session.date|date:"j M" }}</span>
+        <span>
+          <strong>{{ session.label }}</strong><br>
+          <span class="muted">{{ session.exercise_count }} exercise{{ session.exercise_count|pluralize }} · {{ session.set_count }} set{{ session.set_count|pluralize }}</span>
+        </span>
+      </a>
+    {% endfor %}
+  {% empty %}
+    {% if not open_session %}<p class="muted">No sessions yet.</p>{% endif %}
+  {% endfor %}
+{% endblock %}

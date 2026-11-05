@@ -1,0 +1,12 @@
+{% if sets %}
+  <table class="sets">
+    <thead><tr><th>Set</th><th>Weight</th><th>Reps</th></tr></thead>
+    <tbody>
+      {% for set in sets %}
+        <tr><td>{{ set.number }}</td><td>{{ set.weight_display }} kg</td><td>{{ set.reps }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p class="muted">No sets yet.</p>
+{% endif %}

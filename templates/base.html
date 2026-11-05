@@ -1,0 +1,35 @@
+{% load static %}<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Training{% endblock %} · BRC</title>
+</head>
+<body>
+  <header class="topbar">
+    <h1>{% block heading %}Training{% endblock %}</h1>
+    {% if user.is_authenticated %}
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="link">Log out</button>
+      </form>
+    {% endif %}
+  </header>
+
+  <main>
+    {% for message in messages %}
+      <p class="message" role="status">{{ message }}</p>
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+
+  {% if user.is_authenticated %}
+    <nav class="bottom-nav" aria-label="Main">
+      <a href="{% url 'training:history' %}">History</a>
+      {% if user.is_staff %}
+        <a href="{% url 'admin:index' %}">Admin</a>
+      {% endif %}
+    </nav>
+  {% endif %}
+</body>
+</html>

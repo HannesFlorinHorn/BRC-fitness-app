@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}{{ session.label }}{% endblock %}
+{% block heading %}{{ session.label }}{% endblock %}
+
+{% block content %}
+  <p class="muted">{{ session.date|date:"l, j F Y" }}</p>
+
+  {% for logged in exercises %}
+    <section class="card card-block">
+      <h2>{{ logged.exercise.name }}</h2>
+      {% if logged.exercise.tracking == "check" %}
+        <p class="muted">{% if logged.is_done %}Done ✓{% else %}Not done{% endif %}</p>
+      {% else %}
+        {% include "training/_sets_table.html" with sets=logged.sets.all %}
+      {% endif %}
+    </section>
+  {% endfor %}
+
+  {% if session.notes %}
+    <h2 class="label">Notes</h2>
+    <p>{{ session.notes|linebreaksbr }}</p>
+  {% endif %}
+
+  <a href="{% url 'training:history' %}">Back to history</a>
+{% endblock %}
