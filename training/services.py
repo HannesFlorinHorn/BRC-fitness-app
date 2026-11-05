@@ -7,7 +7,7 @@ functions never look anything up by id.
 from django.db import transaction
 from django.utils import timezone
 
-from .models import Session, SessionExercise
+from .models import Exercise, Session, SessionExercise
 
 
 @transaction.atomic
@@ -32,9 +32,18 @@ def add_exercise(session, exercise):
     )
 
 
+def mark_done(session_exercise, done=True):
+    """Tick (or untick) an exercise that is tracked as "tick when done"."""
+    if session_exercise.exercise.tracking != Exercise.Tracking.CHECK:
+        raise ValueError("Only tick-when-done exercises can be marked done")
+    session_exercise.is_done = done
+    session_exercise.save(update_fields=["is_done"])
+
+
 @transaction.atomic
 def finish_session(session):
-    """Drop preloaded exercises the athlete skipped, then mark the session done."""
-    session.exercises.filter(sets__isnull=True).delete()
+    """Drop preloaded exercises the athlete skipped (no sets and not ticked),
+    then mark the session done."""
+    session.exercises.filter(sets__isnull=True, is_done=False).delete()
     session.finished_at = timezone.now()
     session.save(update_fields=["finished_at"])

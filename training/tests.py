@@ -5,7 +5,7 @@ from django.db import IntegrityError
 
 from accounts.models import User
 from training.models import Category, Exercise, ExerciseSet, Plan, PlanExercise, Session, SessionExercise
-from training.services import add_exercise, finish_session, start_session
+from training.services import add_exercise, finish_session, mark_done, start_session
 
 
 @pytest.fixture
@@ -40,7 +40,7 @@ def curl(arms):
 
 @pytest.fixture
 def leg_plan(squat, lunge):
-    plan = Plan.objects.get(name="Legs", owner=None)
+    plan = Plan.objects.create(name="Test legs")
     PlanExercise.objects.create(plan=plan, exercise=squat, position=1)
     PlanExercise.objects.create(plan=plan, exercise=lunge, position=2)
     return plan
@@ -150,3 +150,35 @@ def test_club_plan_names_are_unique_but_athletes_may_reuse_them(athlete):
     Plan.objects.create(name="Legs", owner=athlete)
     with pytest.raises(IntegrityError):
         Plan.objects.create(name="Legs", owner=None)
+
+
+@pytest.mark.django_db
+def test_club_plans_are_seeded_in_order():
+    def names(plan_name):
+        plan = Plan.objects.get(name=plan_name, owner=None)
+        return [entry.exercise.name for entry in plan.plan_exercises.order_by("position")]
+
+    assert names("Legs") == ["Squats", "Romanian deadlift", "Split squats", "Planks"]
+    assert names("Arms")[-1] == "Abs"
+    assert len(names("Core")) == 5
+    assert Exercise.objects.get(name="Planks").method is None
+
+
+@pytest.mark.django_db
+def test_tick_exercises_survive_finish_only_when_ticked(athlete, curl):
+    planks = Exercise.objects.create(name="Test planks", category=curl.category, tracking=Exercise.Tracking.CHECK)
+    abs_ = Exercise.objects.create(name="Test abs", category=curl.category, tracking=Exercise.Tracking.CHECK)
+    session = start_session(athlete)
+    mark_done(add_exercise(session, planks))
+    add_exercise(session, abs_)
+
+    finish_session(session)
+
+    assert exercise_names(session) == ["Test planks"]
+    assert session.exercises.get().method is None
+
+
+@pytest.mark.django_db
+def test_only_tick_exercises_can_be_marked_done(athlete, squat):
+    with pytest.raises(ValueError):
+        mark_done(add_exercise(start_session(athlete), squat))

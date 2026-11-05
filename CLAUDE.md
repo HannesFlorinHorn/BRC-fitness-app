@@ -26,11 +26,11 @@ All primary keys of Session, SessionExercise and ExerciseSet are UUIDs (cheap no
 
 - `User` (custom, in `accounts`): email is the login field. Created before the first migration so it never has to be swapped later.
 - `Category`: name (seed data: legs, arms, core). The muscle group of an exercise; used to label sessions and group the exercise picker. Not a plan.
-- `Exercise` (catalog): name (unique), category, method (1 or 2), is_active. Logged exercises are never deleted; the coach deactivates them instead. Managed in the admin. Athletes pick from this list rather than typing free text, so progress data stays clean. The method is fixed per exercise and set by the owner/coach; athletes never choose it.
+- `Exercise` (catalog): name (unique), category, method (1, 2 or empty when no Methode applies), tracking (`sets` = weight × reps, `check` = tick when done, e.g. Planks, Abs), is_active. Logged exercises are never deleted; the coach deactivates them instead. Managed in the admin. Athletes pick from this list rather than typing free text, so progress data stays clean. The method is fixed per exercise and set by the owner/coach; athletes never choose it.
 - `Plan` (session template): name, owner (FK to user; empty = club plan), is_active. Club plans (seed: Legs, Arms, Core) are maintained by the coach in the admin; athletes can build their own. Read plans with `Plan.objects.visible_to(user)` and edit only `Plan.objects.owned_by(user)`.
 - `PlanExercise`: plan, exercise, position. The same exercise can appear in any number of plans.
 - `Session`: athlete (FK to user), date, notes, created_at, finished_at (empty while the session is still running). No stored categories and no title: the label is derived from the categories of its exercises (e.g. "Legs · Arms").
-- `SessionExercise`: session, exercise, order (athletes may swap it), method. `method` is a snapshot copied automatically from the exercise when it is logged (never chosen by the athlete), so changing a catalog exercise's Methode does not rewrite past sessions.
+- `SessionExercise`: session, exercise, order (athletes may swap it), method, is_done (only for `check` exercises). `method` is a snapshot copied automatically from the exercise when it is logged (never chosen by the athlete), so changing a catalog exercise's Methode does not rewrite past sessions.
 - `ExerciseSet`: session_exercise, number, weight_kg (decimal), reps (positive integer)
 
 Do not name a model `Set` (it clashes with Python's `set`).
@@ -67,13 +67,13 @@ SQLite backup (safe while the app runs): `sqlite3 db.sqlite3 ".backup 'backup.sq
 - Never commit secrets, `.env`, `db.sqlite3` or backups.
 - `DEBUG`, `SECRET_KEY`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS` and cookie security flags all come from the environment. Defaults must be safe for production, and local development overrides them in `.env`.
 - Mobile first: design for a 390 px wide phone, one-handed use, tap targets of at least 48 px, number inputs with `inputmode="decimal"` for weight and `inputmode="numeric"` for reps.
-- Starting a session: the athlete picks a plan (club or their own), which preloads its active exercises in plan order, or "free", which starts empty. Exercises from any plan can be added and the order swapped. Finishing removes preloaded exercises without sets. The logic lives in `training/services.py`.
+- Starting a session: the athlete picks a plan (club or their own), which preloads its active exercises in plan order, or "free", which starts empty. Exercises from any plan can be added and the order swapped. Finishing removes preloaded exercises that have no sets and are not ticked. `check` exercises get a tick, never sets. The logic lives in `training/services.py`.
 - Logging flow: after each saved set, show the form again prefilled with the previous set's weight and reps.
 - Keep the UI simple. A boring page that works beats a clever one.
 
 ## Methode
 
-Every exercise is either Methode 1 or Methode 2. The Methode defines the training plan logic: how many reps per set the athlete must reach and how the weight changes across sets and sessions. In Milestone 1 the app only stores the Methode on the exercise. Targets and progression come later, once the owner has written down the rules.
+Most exercises are Methode 1 or Methode 2; some (e.g. Planks, Abs) have none. The Methode defines the training plan logic: how many reps per set the athlete must reach and how the weight changes across sets and sessions. In Milestone 1 the app only stores the Methode on the exercise. Targets and progression come later, once the owner has written down the rules.
 
 ## UI language
 

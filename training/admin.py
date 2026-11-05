@@ -10,9 +10,9 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Exercise)
 class ExerciseAdmin(admin.ModelAdmin):
-    list_display = ("name", "category", "method", "is_active")
+    list_display = ("name", "category", "method", "tracking", "is_active")
     list_editable = ("is_active",)
-    list_filter = ("category", "method", "is_active")
+    list_filter = ("category", "method", "tracking", "is_active")
     search_fields = ("name",)
 
 

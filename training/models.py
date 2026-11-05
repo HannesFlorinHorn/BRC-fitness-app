@@ -29,9 +29,16 @@ class Exercise(models.Model):
         METHOD_1 = 1, "Methode 1"
         METHOD_2 = 2, "Methode 2"
 
+    class Tracking(models.TextChoices):
+        SETS = "sets", "Weight × reps"
+        CHECK = "check", "Tick when done"
+
     name = models.CharField(max_length=100, unique=True)
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="exercises")
-    method = models.PositiveSmallIntegerField(choices=Method.choices)
+    method = models.PositiveSmallIntegerField(
+        choices=Method.choices, null=True, blank=True, help_text="Leave empty if no Methode applies."
+    )
+    tracking = models.CharField(max_length=10, choices=Tracking.choices, default=Tracking.SETS)
     # Exercises are never deleted once logged; the coach deactivates them instead.
     is_active = models.BooleanField(default=True, help_text="Inactive exercises are hidden when logging.")
 
@@ -136,7 +143,9 @@ class SessionExercise(models.Model):
     order = models.PositiveSmallIntegerField()
     # Copied from the catalog when the exercise is logged, so changing an
     # exercise's Methode later does not rewrite past sessions.
-    method = models.PositiveSmallIntegerField(choices=Exercise.Method.choices, editable=False)
+    method = models.PositiveSmallIntegerField(choices=Exercise.Method.choices, null=True, editable=False)
+    # Only used by "tick when done" exercises; set-based ones count as done once they have sets.
+    is_done = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["order"]
@@ -148,7 +157,7 @@ class SessionExercise(models.Model):
         return f"{self.order}. {self.exercise}"
 
     def save(self, *args, **kwargs):
-        if self.method is None:
+        if self._state.adding:
             self.method = self.exercise.method
         super().save(*args, **kwargs)
 

@@ -13,9 +13,9 @@ Goal: login, record a session, review history, running on the owner's machine.
 - [ ] Create the repo, Django project (`config/`) and app (`training/`), `requirements.txt`, `.env.example`, `.gitignore` (including `.env`, `db.sqlite3`, backups)
 - [x] Models and migrations: custom User (email login), Category, Exercise (with method 1/2, active flag), Plan + PlanExercise, Session, SessionExercise, ExerciseSet (UUID keys)
 - [x] Admin: all models registered, exercise catalog editable, sessions viewable by staff
-- [ ] Seed data: categories (legs, arms, core), club plans (Legs, Arms, Core) and the real exercise list with each exercise's Methode and plan order (ask the owner for the list)
+- [x] Seed data: categories (legs, arms, core), club plans (Legs, Arms, Core) and the real exercise list with each exercise's Methode and plan order (ask the owner for the list)
 - [ ] Login and logout pages, login required for everything else
-- [ ] Pages: start session from a plan (preloads its exercises) or free, add exercise from catalog, swap exercise order, add sets (prefilled from the previous set), delete last set, finish (skipped exercises are dropped)
+- [ ] Pages: start session from a plan (preloads its exercises) or free, add exercise from catalog, swap exercise order, add sets (prefilled from the previous set), tick "check" exercises as done, delete last set, finish (skipped exercises are dropped)
 - [ ] Pages: history list and session detail (own data only)
 - [ ] Design tokens from `docs/design/DESIGN.md` applied via `custom.css` on top of Pico.css
 - [ ] Tests: permission test (athlete A vs B), a model test, and one test of the full logging flow
@@ -88,5 +88,6 @@ Done when: every colleague has logged in on their phone and a nightly backup exi
 - 2026-11-04: Sessions have no title. They are labelled by their categories.
 - 2026-11-05: **Categories are the training plans** (fixed templates, editable by the coach in the admin). Starting a session from a plan preloads its active exercises in order; athletes may add exercises from other plans and swap the order. `Session.categories` was removed: a session's categories are derived from its exercises.
 - 2026-11-05: **Plans are their own model**, replacing "categories are plans" from earlier the same day. Club plans have no owner and are edited by the coach in the admin; athletes can own private plans. An exercise can be in several plans. Category is only the muscle group again.
+- 2026-11-05: Club plans seeded: Legs (Mon), Arms (Wed), Core (Fri), 14 exercises. **Methode is optional** (Planks, Abs have none). Exercises are tracked either as weight × reps or as **tick when done** (Planks, Abs). Variants (plank sides, shoulder directions) are one entry each; athletes know what to do.
 - Open: exact rules of Methode 1 and 2.
 - 2026-11-05: The athlete page for building own plans moves to **Milestone 2**. Until then, plans are created in the admin.
