@@ -32,6 +32,10 @@ Goal: find the problems on your own machine before any server exists.
 - [ ] Check login persistence on the phone (session stays valid across days; cookie lifetime set deliberately)
 - [ ] Confirm test accounts cannot see each other's data by trying direct URLs
 - [ ] Back up with `sqlite3 ... ".backup"`, delete the database, restore from the backup and check that the data is back
+- [ ] Simple landing page (details to be agreed with the owner)
+- [ ] Register mechanism (details to be agreed with the owner; `CLAUDE.md` currently says no signup page)
+- [ ] Feedback field (details to be agreed with the owner)
+- [ ] Legal pages and texts (details to be agreed with the owner)
 - [ ] Short bug list written down and cleared
 
 Bug list:
