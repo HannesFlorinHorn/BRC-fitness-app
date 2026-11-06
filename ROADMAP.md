@@ -38,6 +38,7 @@ Bug list:
 
 - [ ] Email login is case-sensitive: `Anna@club.de` and `anna@club.de` count as different accounts. Until fixed, create accounts in lowercase.
 - [ ] Session lifetimes: admin sessions last 5 minutes, athlete sessions 7 days. Both restart with every request. Admin and app share one cookie, so this needs a small piece of custom code, not just settings; to be planned with the owner.
+- [ ] Auto-finish rule change: an open session closes automatically after 26 hours instead of 4. When auto-closed, its end time is stored as start + 3 hours. Update `CLAUDE.md` and the tests with it.
 
 Done when: you have logged real-looking sessions on your phone without surprises and a restore has worked.
 
