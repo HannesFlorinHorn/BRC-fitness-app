@@ -98,5 +98,6 @@ Done when: every colleague has logged in on their phone and a nightly backup exi
 - 2026-11-06: **One open session per athlete.** It finishes itself 4 hours after it was started, on the athlete's next visit. Sessions with nothing logged are discarded.
 - 2026-11-06: The coach has **two accounts**: a normal athlete account to train with and a staff account to see everyone's data in the admin. Staff accounts cannot log sessions.
 - 2026-11-06: In `DESIGN.md`, the color list at the top wins over the text below it (red `#ba0022`, light background). Pico.css and the fonts are stored in `static/`, so pages load nothing from Google or a CDN.
+- 2026-11-06: An exercise's `tracking` never changes between sets and check once logged, so it is not copied per session like the Methode. Session labels stay derived from current categories and are not stored.
 - Open: exact rules of Methode 1 and 2.
 - 2026-11-05: The athlete page for building own plans moves to **Milestone 2**. Until then, plans are created in the admin.
