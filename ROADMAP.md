@@ -37,6 +37,7 @@ Goal: find the problems on your own machine before any server exists.
 Bug list:
 
 - [ ] Email login is case-sensitive: `Anna@club.de` and `anna@club.de` count as different accounts. Until fixed, create accounts in lowercase.
+- [ ] Session lifetimes: admin sessions last 5 minutes, athlete sessions 7 days. Both restart with every request. Admin and app share one cookie, so this needs a small piece of custom code, not just settings; to be planned with the owner.
 
 Done when: you have logged real-looking sessions on your phone without surprises and a restore has worked.
 
