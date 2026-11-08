@@ -36,6 +36,7 @@ Goal: find the problems on your own machine before any server exists.
 - [ ] Register mechanism (details to be agreed with the owner; `CLAUDE.md` currently says no signup page)
 - [ ] Feedback field (details to be agreed with the owner)
 - [ ] Legal pages and texts (details to be agreed with the owner)
+- [ ] Consider dropping Pico.css (keeping only `custom.css`) if overriding its styles keeps causing trouble during phone testing
 - [ ] Short bug list written down and cleared
 
 Bug list:
@@ -43,6 +44,11 @@ Bug list:
 - [ ] Email login is case-sensitive: `Anna@club.de` and `anna@club.de` count as different accounts. Until fixed, create accounts in lowercase.
 - [ ] Session lifetimes: admin sessions last 5 minutes, athlete sessions 7 days. Both restart with every request. Admin and app share one cookie, so this needs a small piece of custom code, not just settings; to be planned with the owner.
 - [ ] Auto-finish rule change: an open session closes automatically after 26 hours instead of 4. When auto-closed, its end time is stored as start + 3 hours. Update `CLAUDE.md` and the tests with it.
+- [ ] Friendly error pages: styled `404.html`, `403.html` and `500.html` with a way back to the history. Typing the address of an action (e.g. `/finish/`) leads back to the related page instead of an empty 405 page.
+- [ ] Each exercise at most once per session. The exercise picker lists only exercises not yet in the session, and adding checks it again on the server (a stale page or double tap must not create a duplicate). To decide when planning: a database rule as well, and what happens when a plan contains the same exercise twice.
+- [ ] Adding an exercise always redirects to the session log (today, weight exercises go straight to their sets page).
+- [ ] History lists sessions in the order they were logged. To decide when planning: newest or oldest first, and where a backdated session goes (today the list sorts by training date).
+- [ ] Session log shows which exercises are still open: open ones use the active card style (red border), done ones have their name greyed out a little. To decide when planning: when a weight exercise counts as done (after its first set, or only when the athlete marks it).
 
 Done when: you have logged real-looking sessions on your phone without surprises and a restore has worked.
 

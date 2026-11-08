@@ -98,7 +98,7 @@ LOGIN_REDIRECT_URL = "training:history"
 LOGOUT_REDIRECT_URL = "login"
 
 # Athletes log in on their phone and should stay logged in across training days.
-SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 days
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 7  # 7 days
 SESSION_COOKIE_SECURE = env_bool("SESSION_COOKIE_SECURE", True)
 CSRF_COOKIE_SECURE = env_bool("CSRF_COOKIE_SECURE", True)
 SESSION_COOKIE_HTTPONLY = True
