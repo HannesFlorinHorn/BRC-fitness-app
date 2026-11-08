@@ -80,7 +80,7 @@ Most exercises are Methode 1 or Methode 2; some (e.g. Planks, Abs) have none. Th
 
 ## UI language
 
-English for all UI text, code, comments and commits.
+English for all UI text, code, comments and commits. Exception: the legal notice and privacy pages (`templates/legal/`) are in German.
 
 ## Open questions (ask the owner, do not guess)
 

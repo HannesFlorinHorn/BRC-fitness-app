@@ -382,3 +382,4 @@ def test_legal_pages_open_without_login_and_are_linked_from_the_login_page(clien
         assert reverse(name) in login_page
         response = client.get(reverse(name))
         assert response.status_code == 200 and text in response.content.decode()
+        assert '<html lang="de"' in response.content.decode()

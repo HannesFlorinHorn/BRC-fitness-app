@@ -1,31 +1,32 @@
 {% extends "base.html" %}
 
-{% block title %}Legal notice{% endblock %}
-{% block heading %}Legal notice{% endblock %}
+{% block lang %}de{% endblock %}
+{% block title %}Impressum{% endblock %}
+{% block heading %}Impressum{% endblock %}
 
 {% block content %}
   <div class="legal">
-    <p>Information according to § 5 DDG (German Digital Services Act)</p>
+    <p>Angaben gemäß § 5 DDG (Digitale-Dienste-Gesetz)</p>
 
-    <h2>Responsible</h2>
+    <h2>Verantwortlich</h2>
     <p>
       Hannes-Florin Horn<br>
       c/o Berliner Ruder-Club<br>
       Bismarckstr. 4<br>
       14109 Berlin<br>
-      Germany
+      Deutschland
     </p>
 
-    <h2>Contact</h2>
-    <p>Email: <a href="mailto:hannesflorin@gmail.com">hannesflorin@gmail.com</a></p>
+    <h2>Kontakt</h2>
+    <p>E-Mail: <a href="mailto:hannesflorin@gmail.com">hannesflorin@gmail.com</a></p>
 
-    <h2>About this app</h2>
+    <h2>Über diese App</h2>
     <p>
-      This training tracker is a private, non-commercial project for a small training group.
-      It is not operated by the Berliner Ruder-Club.
+      Dieser Trainings-Tracker ist ein privates, nicht kommerzielles Projekt für eine kleine Trainingsgruppe.
+      Er wird nicht vom Berliner Ruder-Club betrieben.
     </p>
 
-    <p><a href="{% url 'privacy' %}">Privacy notice</a></p>
+    <p><a href="{% url 'privacy' %}">Datenschutzerklärung</a></p>
   </div>
-  <a class="button secondary" href="{% url 'login' %}">Back</a>
+  <a class="button secondary" href="{% url 'login' %}">Zurück</a>
 {% endblock %}
