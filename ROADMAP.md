@@ -48,7 +48,8 @@ Bug list:
 - [x] Each exercise at most once per session. The exercise picker lists only exercises not yet in the session, and adding checks it again on the server (a stale page or double tap must not create a duplicate). To decide when planning: a database rule as well, and what happens when a plan contains the same exercise twice.
 - [x] Adding an exercise always redirects to the session log (today, weight exercises go straight to their sets page).
 - [x] History lists sessions newest first. The list was unsorted because Django drops the default ordering in queries that count; it now sorts by training date, then by logging time.
-- [ ] Session log shows which exercises are still open: open ones use the active card style (red border), done ones have their name greyed out a little. To decide when planning: when a weight exercise counts as done (after its first set, or only when the athlete marks it).
+- [ ] Session log shows which exercises are still open: open ones use the active card style (red border), done ones have their name greyed out a little. To decide when planning: when a weight exercise counts as done (after its first set, or only when the athlete marks it). Postponed by the owner on 2026-11-08 (red border on every open card is too much); to be revisited.
+- [x] Session notes got lost: notes typed on the session log were only saved by Finish, so opening an exercise or "Add exercise" first threw them away. The notes field is hidden for now; it comes back in Milestone 2.
 
 Done when: you have logged real-looking sessions on your phone without surprises and a restore has worked.
 
@@ -70,6 +71,7 @@ Done when: every colleague has logged in on their phone and a nightly backup exi
 - [ ] Progress charts: estimated 1RM per exercise, weekly volume, personal records
 - [ ] Coach overview page (athletes, last session, consistency) instead of the admin
 - [ ] Edit and delete sessions, exercise catalog page, CSV export
+- [ ] Session notes field back in the athlete pages, without losing typed text (e.g. notes asked on a finish page, or autosaved). The backend still stores notes; only the field was removed in 1.2.
 - [ ] Training plan logic for Methode 1 and 2: target reps per set and suggested weight progression (rules to be written down by the owner first)
 - [ ] "My plans" page: athletes create their own plans, add and reorder exercises (model exists since 1.1; until then plans are created in the admin)
 - [ ] More tests, especially for permissions
@@ -112,5 +114,6 @@ Done when: every colleague has logged in on their phone and a nightly backup exi
 - 2026-11-06: An exercise's `tracking` never changes between sets and check once logged, so it is not copied per session like the Methode. Session labels stay derived from current categories and are not stored.
 - 2026-11-08: An open session now finishes itself **26 hours** after it was started (was 4), so a session can be finished the next morning. The auto-finished end time is recorded as start + 3 hours.
 - 2026-11-08: **Each exercise at most once per session**, enforced by a database rule. The picker hides exercises already in the session. A plan that lists an exercise twice loads it once, at its first position.
+- 2026-11-08: The session notes field is removed from the session log until Milestone 2, because typed notes were lost when leaving the page before Finish.
 - Open: exact rules of Methode 1 and 2.
 - 2026-11-05: The athlete page for building own plans moves to **Milestone 2**. Until then, plans are created in the admin.
