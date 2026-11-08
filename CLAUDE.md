@@ -65,6 +65,7 @@ SQLite backup (safe while the app runs): `sqlite3 db.sqlite3 ".backup 'backup.sq
 - Never edit an existing migration after it was applied to data that matters. Add a new one.
 - Ask before adding any dependency. Keep `requirements.txt` pinned.
 - Never commit secrets, `.env`, `db.sqlite3` or backups.
+- Logins expire after inactivity: 30 minutes for staff accounts, 7 days for athletes, restarted by every request (`accounts/session_lifetime.py`, `STAFF_SESSION_AGE` and `SESSION_COOKIE_AGE` in settings).
 - `DEBUG`, `SECRET_KEY`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS` and cookie security flags all come from the environment. Defaults must be safe for production, and local development overrides them in `.env`.
 - Mobile first: design for a 390 px wide phone, one-handed use, tap targets of at least 48 px, number inputs with `inputmode="decimal"` for weight and `inputmode="numeric"` for reps.
 - Starting a session: the athlete picks a plan (club or their own), which preloads its active exercises in plan order, or "free", which starts empty. Exercises from any plan can be added and the order swapped. Finishing removes preloaded exercises that have no sets and are not ticked. `check` exercises get a tick, never sets. The logic lives in `training/services.py`.

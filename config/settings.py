@@ -53,6 +53,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "accounts.session_lifetime.SessionLifetimeMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.contrib.auth.middleware.LoginRequiredMiddleware",
@@ -97,8 +98,12 @@ LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "training:history"
 LOGOUT_REDIRECT_URL = "login"
 
-# Athletes log in on their phone and should stay logged in across training days.
+# Logins expire after this much inactivity; every request restarts the timer.
+# Athletes stay logged in on their phone across training days; staff accounts
+# can read everyone's data, so they time out quickly (accounts/session_lifetime.py).
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 7  # 7 days
+STAFF_SESSION_AGE = 60 * 30  # 30 minutes
+SESSION_SAVE_EVERY_REQUEST = True
 SESSION_COOKIE_SECURE = env_bool("SESSION_COOKIE_SECURE", True)
 CSRF_COOKIE_SECURE = env_bool("CSRF_COOKIE_SECURE", True)
 SESSION_COOKIE_HTTPONLY = True

@@ -39,7 +39,7 @@ Goal: find the problems on your own machine before any server exists.
 Bug list:
 
 - [x] Email login is case-sensitive: `Anna@club.de` and `anna@club.de` count as different accounts. Until fixed, create accounts in lowercase.
-- [ ] Session lifetimes: admin sessions last 30 minutes, athlete sessions 7 days. Both restart with every request. Admin and app share one cookie, so this needs a small piece of custom code, not just settings; to be planned with the owner.
+- [x] Session lifetimes: staff accounts are logged out after 30 minutes without activity, athletes after 7 days. Every request restarts the timer (`accounts/session_lifetime.py`).
 - [x] Auto-finish rule change: an open session closes automatically after 26 hours instead of 4. When auto-closed, its end time is stored as start + 3 hours. Update `CLAUDE.md` and the tests with it.
 - [ ] Friendly error pages: styled `404.html`, `403.html` and `500.html` with a way back to the history. Typing the address of an action (e.g. `/finish/`) leads back to the related page instead of an empty 405 page.
 - [x] Each exercise at most once per session. The exercise picker lists only exercises not yet in the session, and adding checks it again on the server (a stale page or double tap must not create a duplicate). To decide when planning: a database rule as well, and what happens when a plan contains the same exercise twice.
@@ -58,6 +58,10 @@ Goal: colleagues can reach it over HTTPS and start logging.
 - [ ] Docker Compose with Caddy and the app, database file and backups on a volume
 - [ ] Small EU VPS, domain, DNS, firewall, SSH keys only, automatic security updates
 - [ ] Nightly SQLite backup copied off the server; restore tested once
+- [ ] Nightly `python manage.py clearsessions` to delete expired logins from the database
+- [ ] Limit failed login attempts (e.g. `django-axes`; new dependency, ask first)
+- [ ] Two-factor login for staff accounts (to be planned with the owner)
+- [ ] Move the admin away from the well-known `/admin/` address
 - [ ] Accounts created for colleagues, a one-page "how to log in" note, consent for storing their data
 
 Done when: every colleague has logged in on their phone and a nightly backup exists off the server.
@@ -116,5 +120,6 @@ Done when: every colleague has logged in on their phone and a nightly backup exi
 - 2026-11-08: **Each exercise at most once per session**, enforced by a database rule. The picker hides exercises already in the session. A plan that lists an exercise twice loads it once, at its first position.
 - 2026-11-08: The session notes field is removed from the session log until Milestone 2, because typed notes were lost when leaving the page before Finish.
 - 2026-11-08: Landing page, registration, feedback field and the open/done highlight on the session log move from 1.2 to **Milestone 2**.
+- 2026-11-09: **Login lifetime depends on the account, not the page** (admin and app share one cookie): staff accounts 30 minutes, athletes 7 days, both counted from the last request.
 - Open: exact rules of Methode 1 and 2.
 - 2026-11-05: The athlete page for building own plans moves to **Milestone 2**. Until then, plans are created in the admin.
