@@ -12,6 +12,8 @@
       {% for exercise in category.list %}
         <button type="submit" name="exercise" value="{{ exercise.pk }}" class="secondary">{{ exercise.name }}</button>
       {% endfor %}
+    {% empty %}
+      <p class="muted">Every exercise is already in this session.</p>
     {% endfor %}
   </form>
   <a class="button secondary" href="{% url 'training:session_log' session.pk %}">Back to session</a>

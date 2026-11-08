@@ -28,13 +28,19 @@ def start_session(athlete, plan=None, date=None):
     session = Session.objects.create(athlete=athlete, date=date or timezone.localdate())
     if plan is not None:
         entries = plan.plan_exercises.filter(exercise__is_active=True).select_related("exercise")
-        for order, entry in enumerate(entries.order_by("position"), start=1):
-            SessionExercise.objects.create(session=session, exercise=entry.exercise, order=order)
+        # An exercise listed twice in a plan is loaded once, at its first position.
+        exercises = list(dict.fromkeys(entry.exercise for entry in entries.order_by("position")))
+        for order, exercise in enumerate(exercises, start=1):
+            SessionExercise.objects.create(session=session, exercise=exercise, order=order)
     return session
 
 
+@transaction.atomic
 def add_exercise(session, exercise):
-    """Append an exercise (from any plan) to the end of the session."""
+    """Append an exercise (from any plan) to the end of the session. Each
+    exercise can be in a session once; raises ValueError if it already is."""
+    if session.exercises.filter(exercise=exercise).exists():
+        raise ValueError(f"{exercise} is already in this session")
     last = session.exercises.order_by("-order").first()
     return SessionExercise.objects.create(
         session=session, exercise=exercise, order=last.order + 1 if last else 1

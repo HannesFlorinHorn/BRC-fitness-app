@@ -271,6 +271,19 @@ def test_staff_accounts_cannot_log_sessions(client, athlete_b, squats):
 
 
 @pytest.mark.django_db
+def test_exercise_picker_hides_exercises_already_in_the_session(client_a, athlete_a, plan, squats):
+    session = start_session(athlete_a, plan)
+    url = reverse("training:exercise_add", args=[session.pk])
+    page = client_a.get(url).content.decode()
+    assert "Squats" not in page and "Leg curl" in page
+
+    # A stale page or a double tap posts it anyway: no duplicate, just a note.
+    response = client_a.post(url, {"exercise": squats.pk}, follow=True)
+    assert session.exercises.filter(exercise=squats).count() == 1
+    assert "Squats is already in this session." in response.content.decode()
+
+
+@pytest.mark.django_db
 def test_adding_an_unknown_exercise_is_a_404(client_a, athlete_a):
     url = reverse("training:exercise_add", args=[start_session(athlete_a).pk])
     assert client_a.post(url, {"exercise": "abc"}).status_code == 404

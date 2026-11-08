@@ -45,7 +45,7 @@ Bug list:
 - [ ] Session lifetimes: admin sessions last 30 minutes, athlete sessions 7 days. Both restart with every request. Admin and app share one cookie, so this needs a small piece of custom code, not just settings; to be planned with the owner.
 - [x] Auto-finish rule change: an open session closes automatically after 26 hours instead of 4. When auto-closed, its end time is stored as start + 3 hours. Update `CLAUDE.md` and the tests with it.
 - [ ] Friendly error pages: styled `404.html`, `403.html` and `500.html` with a way back to the history. Typing the address of an action (e.g. `/finish/`) leads back to the related page instead of an empty 405 page.
-- [ ] Each exercise at most once per session. The exercise picker lists only exercises not yet in the session, and adding checks it again on the server (a stale page or double tap must not create a duplicate). To decide when planning: a database rule as well, and what happens when a plan contains the same exercise twice.
+- [x] Each exercise at most once per session. The exercise picker lists only exercises not yet in the session, and adding checks it again on the server (a stale page or double tap must not create a duplicate). To decide when planning: a database rule as well, and what happens when a plan contains the same exercise twice.
 - [x] Adding an exercise always redirects to the session log (today, weight exercises go straight to their sets page).
 - [ ] History lists sessions in the order they were logged. To decide when planning: newest or oldest first, and where a backdated session goes (today the list sorts by training date).
 - [ ] Session log shows which exercises are still open: open ones use the active card style (red border), done ones have their name greyed out a little. To decide when planning: when a weight exercise counts as done (after its first set, or only when the athlete marks it).
@@ -111,5 +111,6 @@ Done when: every colleague has logged in on their phone and a nightly backup exi
 - 2026-11-06: In `DESIGN.md`, the color list at the top wins over the text below it (red `#ba0022`, light background). Pico.css and the fonts are stored in `static/`, so pages load nothing from Google or a CDN.
 - 2026-11-06: An exercise's `tracking` never changes between sets and check once logged, so it is not copied per session like the Methode. Session labels stay derived from current categories and are not stored.
 - 2026-11-08: An open session now finishes itself **26 hours** after it was started (was 4), so a session can be finished the next morning. The auto-finished end time is recorded as start + 3 hours.
+- 2026-11-08: **Each exercise at most once per session**, enforced by a database rule. The picker hides exercises already in the session. A plan that lists an exercise twice loads it once, at its first position.
 - Open: exact rules of Methode 1 and 2.
 - 2026-11-05: The athlete page for building own plans moves to **Milestone 2**. Until then, plans are created in the admin.

@@ -112,9 +112,15 @@ def exercise_add(request, session):
             exercise = Exercise.objects.get(pk=request.POST.get("exercise"), is_active=True)
         except (Exercise.DoesNotExist, ValueError):
             raise Http404
-        services.add_exercise(session, exercise)
+        try:
+            services.add_exercise(session, exercise)
+        except (ValueError, IntegrityError):
+            # A stale picker or a double tap: the exercise is already there.
+            messages.info(request, f"{exercise.name} is already in this session.")
         return redirect("training:session_log", session.pk)
-    exercises = Exercise.objects.filter(is_active=True).select_related("category")
+    exercises = (
+        Exercise.objects.filter(is_active=True).exclude(session_exercises__session=session).select_related("category")
+    )
     return render(request, "training/exercise_add.html", {"session": session, "exercises": exercises})
 
 

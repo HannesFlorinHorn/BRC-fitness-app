@@ -158,6 +158,7 @@ class SessionExercise(models.Model):
         ordering = ["order"]
         constraints = [
             models.UniqueConstraint(fields=["session", "order"], name="unique_exercise_order_per_session"),
+            models.UniqueConstraint(fields=["session", "exercise"], name="unique_exercise_per_session"),
         ]
 
     def __str__(self):

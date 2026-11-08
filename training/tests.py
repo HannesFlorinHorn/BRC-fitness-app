@@ -72,7 +72,8 @@ def test_session_exercise_keeps_method_when_catalog_changes(athlete, squat):
 
     logged.refresh_from_db()
     assert logged.method == Exercise.Method.METHOD_1
-    later = SessionExercise.objects.create(session=session, exercise=squat, order=2)
+    later_session = Session.objects.create(athlete=athlete, finished_at=timezone.now())
+    later = SessionExercise.objects.create(session=later_session, exercise=squat, order=1)
     assert later.method == Exercise.Method.METHOD_2
 
 
@@ -252,6 +253,25 @@ def test_tick_exercises_take_no_sets(athlete):
     logged = add_exercise(start_session(athlete), Exercise.objects.get(name="Planks"))
     with pytest.raises(ValueError):
         add_set(logged, Decimal("0"), 1)
+
+
+@pytest.mark.django_db
+def test_each_exercise_is_in_a_session_once(athlete, squat, leg_plan):
+    session = start_session(athlete, leg_plan)
+    with pytest.raises(ValueError):
+        add_exercise(session, squat)
+    with pytest.raises(IntegrityError), transaction.atomic():
+        SessionExercise.objects.create(session=session, exercise=squat, order=9)
+    assert session.exercises.filter(exercise=squat).count() == 1
+
+
+@pytest.mark.django_db
+def test_exercise_listed_twice_in_a_plan_is_loaded_once(athlete, squat, curl, leg_plan):
+    PlanExercise.objects.create(plan=leg_plan, exercise=curl, position=3)
+    PlanExercise.objects.create(plan=leg_plan, exercise=squat, position=4)
+    session = start_session(athlete, leg_plan)
+    assert exercise_names(session) == ["Back squat", "Lunge", "Biceps curl"]
+    assert [se.order for se in session.exercises.all()] == [1, 2, 3]
 
 
 @pytest.mark.django_db
