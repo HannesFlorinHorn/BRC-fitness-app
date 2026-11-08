@@ -121,7 +121,9 @@ def test_full_logging_flow(client_a, athlete_a, plan):
     client_a.post(reverse("training:exercise_tick", args=[planks.pk]))
     curl = Exercise.objects.get(name="Leg curl")
     add = client_a.post(reverse("training:exercise_add", args=[session.pk]), {"exercise": curl.pk})
-    client_a.post(add["Location"], {"weight_kg": "30", "reps": "12"})
+    assert add["Location"] == reverse("training:session_log", args=[session.pk])
+    curl_url = reverse("training:exercise_sets", args=[session.exercises.get(exercise=curl).pk])
+    client_a.post(curl_url, {"weight_kg": "30", "reps": "12"})
     client_a.post(reverse("training:exercise_move", args=[planks.pk, "up"]))
 
     # Finish: skipped exercises are gone, the session is in the history.

@@ -112,10 +112,8 @@ def exercise_add(request, session):
             exercise = Exercise.objects.get(pk=request.POST.get("exercise"), is_active=True)
         except (Exercise.DoesNotExist, ValueError):
             raise Http404
-        logged = services.add_exercise(session, exercise)
-        if exercise.tracking == Exercise.Tracking.CHECK:
-            return redirect("training:session_log", session.pk)
-        return redirect("training:exercise_sets", logged.pk)
+        services.add_exercise(session, exercise)
+        return redirect("training:session_log", session.pk)
     exercises = Exercise.objects.filter(is_active=True).select_related("category")
     return render(request, "training/exercise_add.html", {"session": session, "exercises": exercises})
 
