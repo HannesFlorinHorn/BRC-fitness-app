@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% comment %}
+  Shared layout of the error pages. 500.html and 403_csrf.html are rendered
+  without a request, so the user is unknown there and the bottom bar is hidden.
+{% endcomment %}
+
+{% block content %}
+  <p>{% block message %}{% endblock %}</p>
+  <a class="button" href="{% url 'training:history' %}">Back to history</a>
+{% endblock %}

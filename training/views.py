@@ -6,7 +6,6 @@ from django.db import IntegrityError
 from django.db.models import Count
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_POST
 
 from . import services
 from .forms import SetForm, StartSessionForm
@@ -28,6 +27,20 @@ def athlete_only(view):
 def redirect_to_finished(request, session):
     messages.info(request, "This session is already finished.")
     return redirect("training:session_detail", session.pk)
+
+
+def post_only(view):
+    """For buttons that change data. Opening the address directly (typed,
+    bookmarked, Back button) goes back to the session log instead of an
+    empty 405 page. Goes below the guard decorators, so they run first."""
+
+    @wraps(view)
+    def wrapper(request, obj, *args, **kwargs):
+        if request.method != "POST":
+            return redirect("training:session_log", getattr(obj, "session_id", obj.pk))
+        return view(request, obj, *args, **kwargs)
+
+    return wrapper
 
 
 def with_open_session(view):
@@ -126,8 +139,8 @@ def exercise_add(request, session):
     return render(request, "training/exercise_add.html", {"session": session, "exercises": exercises})
 
 
-@require_POST
 @with_open_session
+@post_only
 def session_finish(request, session):
     session.notes = request.POST.get("notes", "").strip()
     session.save(update_fields=["notes"])
@@ -157,15 +170,15 @@ def exercise_sets(request, logged):
     return render(request, "training/exercise_sets.html", context)
 
 
-@require_POST
 @with_open_exercise
+@post_only
 def set_delete_last(request, logged):
     services.delete_last_set(logged)
     return redirect("training:exercise_sets", logged.pk)
 
 
-@require_POST
 @with_open_exercise
+@post_only
 def exercise_tick(request, logged):
     if logged.exercise.tracking != Exercise.Tracking.CHECK:
         raise Http404
@@ -173,8 +186,8 @@ def exercise_tick(request, logged):
     return redirect("training:session_log", logged.session_id)
 
 
-@require_POST
 @with_open_exercise
+@post_only
 def exercise_move(request, logged, direction):
     if direction not in ("up", "down"):
         raise Http404

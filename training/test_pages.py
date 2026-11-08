@@ -3,6 +3,8 @@ from decimal import Decimal
 
 import pytest
 from django.core.exceptions import ValidationError
+from django.template.loader import render_to_string
+from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
 
@@ -303,3 +305,71 @@ def test_adding_an_unknown_exercise_is_a_404(client_a, athlete_a):
     url = reverse("training:exercise_add", args=[start_session(athlete_a).pk])
     assert client_a.post(url, {"exercise": "abc"}).status_code == 404
     assert client_a.post(url, {"exercise": "999999"}).status_code == 404
+
+
+@pytest.mark.django_db
+def test_missing_and_foreign_pages_show_the_friendly_404(client_a, athlete_b, squats):
+    theirs = logged_session(athlete_b, squats)
+    for url in ("/no-such-page/", reverse("training:session_detail", args=[theirs.pk])):
+        response = client_a.get(url)
+        assert response.status_code == 404
+        page = response.content.decode()
+        assert "Page not found" in page and "Back to history" in page
+        assert "Legs" not in page
+
+
+@pytest.mark.django_db
+def test_staff_on_athlete_pages_see_the_friendly_403(client):
+    client.force_login(User.objects.create_user(email="coach@example.com", password="pw", is_staff=True))
+    response = client.get(reverse("training:start"))
+    assert response.status_code == 403
+    assert "Log in with your athlete account" in response.content.decode()
+
+
+@pytest.mark.django_db
+def test_expired_form_shows_the_page_expired_message(athlete_a):
+    client = Client(enforce_csrf_checks=True)
+    client.force_login(athlete_a)
+    response = client.post(reverse("training:start"), {"date": timezone.localdate().isoformat(), "plan": ""})
+    assert response.status_code == 403
+    assert "This page has expired" in response.content.decode()
+    assert not Session.objects.exists()
+
+
+def test_server_error_page_renders_without_a_request():
+    page = render_to_string("500.html")
+    assert "Something went wrong" in page and reverse("training:history") in page
+
+
+@pytest.mark.django_db
+def test_opening_an_action_address_goes_back_to_the_log(client_a, athlete_a, plan):
+    session = start_session(athlete_a, plan)
+    squats = session.exercises.get(exercise__name="Squats")
+    add_set(squats, Decimal("60"), 8)
+    planks = session.exercises.get(exercise__name="Planks")
+    log_url = reverse("training:session_log", args=[session.pk])
+
+    for url in (
+        reverse("training:session_finish", args=[session.pk]),
+        reverse("training:set_delete_last", args=[squats.pk]),
+        reverse("training:exercise_tick", args=[planks.pk]),
+        reverse("training:exercise_move", args=[planks.pk, "up"]),
+    ):
+        response = client_a.get(url)
+        assert response.status_code == 302 and response["Location"] == log_url, url
+
+    session.refresh_from_db()
+    planks.refresh_from_db()
+    assert session.finished_at is None and squats.sets.count() == 1
+    assert not planks.is_done and exercise_order(session)[-1] == "Planks"
+
+
+@pytest.mark.django_db
+def test_opening_logout_directly_keeps_you_logged_in(client_a):
+    response = client_a.get(reverse("logout"))
+    assert response["Location"] == reverse("training:history")
+    assert client_a.get(reverse("training:history")).status_code == 200
+
+
+def exercise_order(session):
+    return [logged.exercise.name for logged in session.exercises.all()]
