@@ -1,6 +1,6 @@
 # Roadmap
 
-Last updated: 2026-11-06. Current milestone: **1.1**.
+Last updated: 2026-11-08. Current milestone: **1.2**.
 
 Goal: the training season has already started, so the first priority is a small, reliable app that collects data. Everything fancy comes later.
 
@@ -42,7 +42,7 @@ Goal: find the problems on your own machine before any server exists.
 Bug list:
 
 - [ ] Email login is case-sensitive: `Anna@club.de` and `anna@club.de` count as different accounts. Until fixed, create accounts in lowercase.
-- [ ] Session lifetimes: admin sessions last 5 minutes, athlete sessions 7 days. Both restart with every request. Admin and app share one cookie, so this needs a small piece of custom code, not just settings; to be planned with the owner.
+- [ ] Session lifetimes: admin sessions last 30 minutes, athlete sessions 7 days. Both restart with every request. Admin and app share one cookie, so this needs a small piece of custom code, not just settings; to be planned with the owner.
 - [ ] Auto-finish rule change: an open session closes automatically after 26 hours instead of 4. When auto-closed, its end time is stored as start + 3 hours. Update `CLAUDE.md` and the tests with it.
 - [ ] Friendly error pages: styled `404.html`, `403.html` and `500.html` with a way back to the history. Typing the address of an action (e.g. `/finish/`) leads back to the related page instead of an empty 405 page.
 - [ ] Each exercise at most once per session. The exercise picker lists only exercises not yet in the session, and adding checks it again on the server (a stale page or double tap must not create a duplicate). To decide when planning: a database rule as well, and what happens when a plan contains the same exercise twice.
