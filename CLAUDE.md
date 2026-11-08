@@ -69,7 +69,7 @@ SQLite backup (safe while the app runs): `sqlite3 db.sqlite3 ".backup 'backup.sq
 - Mobile first: design for a 390 px wide phone, one-handed use, tap targets of at least 48 px, number inputs with `inputmode="decimal"` for weight and `inputmode="numeric"` for reps.
 - Starting a session: the athlete picks a plan (club or their own), which preloads its active exercises in plan order, or "free", which starts empty. Exercises from any plan can be added and the order swapped. Finishing removes preloaded exercises that have no sets and are not ticked. `check` exercises get a tick, never sets. The logic lives in `training/services.py`.
 - A session's date is prefilled with today and can be set to a past date (never a future one) to log a session already done.
-- Each athlete has at most one open session (enforced by a database constraint). An open session finishes itself 4 hours after it was started; with no background job, this happens on the athlete's next visit (`get_open_session`). A session with nothing logged is discarded when it finishes.
+- Each athlete has at most one open session (enforced by a database constraint). An open session finishes itself 26 hours after it was started, with its end time recorded as start + 3 hours; with no background job, this happens on the athlete's next visit (`get_open_session`). A session with nothing logged is discarded when it finishes.
 - Logging flow: after each saved set, show the form again prefilled with the previous set's weight and reps.
 - Keep the UI simple. A boring page that works beats a clever one.
 

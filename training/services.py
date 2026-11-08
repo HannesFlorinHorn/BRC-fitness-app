@@ -12,7 +12,9 @@ from django.utils import timezone
 from .models import Exercise, ExerciseSet, Session, SessionExercise
 
 # Athletes forget to tap Finish; an open session ends by itself after this long.
-AUTO_FINISH_AFTER = timedelta(hours=4)
+AUTO_FINISH_AFTER = timedelta(hours=26)
+# The real end time is unknown then, so it is recorded as a typical session length.
+AUTO_FINISH_DURATION = timedelta(hours=3)
 
 
 @transaction.atomic
@@ -94,5 +96,5 @@ def get_open_session(athlete):
     sessions past the time limit are finished here, on the next visit."""
     open_sessions = Session.objects.filter(athlete=athlete, finished_at__isnull=True)
     for session in open_sessions.filter(created_at__lte=timezone.now() - AUTO_FINISH_AFTER):
-        finish_session(session, finished_at=session.created_at + AUTO_FINISH_AFTER)
+        finish_session(session, finished_at=session.created_at + AUTO_FINISH_DURATION)
     return open_sessions.first()

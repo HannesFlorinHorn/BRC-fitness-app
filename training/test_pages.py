@@ -194,7 +194,7 @@ def test_finished_session_cannot_be_changed(client_a, athlete_a, squats):
 @pytest.mark.django_db
 def test_session_past_the_time_limit_stops_accepting_sets(client_a, athlete_a, squats):
     session = logged_session(athlete_a, squats, finish=False)
-    Session.objects.filter(pk=session.pk).update(created_at=timezone.now() - timedelta(hours=5))
+    Session.objects.filter(pk=session.pk).update(created_at=timezone.now() - timedelta(hours=27))
     logged = session.exercises.get()
 
     response = client_a.post(reverse("training:exercise_sets", args=[logged.pk]), {"weight_kg": "1", "reps": "1"})

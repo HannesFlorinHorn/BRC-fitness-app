@@ -213,19 +213,19 @@ def test_session_can_be_logged_for_a_past_date(athlete):
 
 
 @pytest.mark.django_db
-def test_open_session_finishes_itself_after_four_hours(athlete, squat):
+def test_open_session_finishes_itself_after_26_hours_with_a_3_hour_length(athlete, squat):
     session = start_session(athlete)
     add_set(add_exercise(session, squat), Decimal("60"), 8)
-    started = timezone.now() - timedelta(hours=3, minutes=59)
+    started = timezone.now() - timedelta(hours=25, minutes=59)
     Session.objects.filter(pk=session.pk).update(created_at=started)
     assert get_open_session(athlete) == session
 
-    started = timezone.now() - timedelta(hours=4, minutes=1)
+    started = timezone.now() - timedelta(hours=26, minutes=1)
     Session.objects.filter(pk=session.pk).update(created_at=started)
     assert get_open_session(athlete) is None
 
     session.refresh_from_db()
-    assert session.finished_at == started + timedelta(hours=4)
+    assert session.finished_at == started + timedelta(hours=3)
     assert session.exercises.get().sets.count() == 1
 
 
