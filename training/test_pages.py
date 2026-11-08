@@ -88,6 +88,21 @@ def test_history_shows_own_sessions_and_detail(client_a, athlete_a, squats):
 
 
 @pytest.mark.django_db
+def test_history_lists_newest_sessions_first(client_a, athlete_a, squats):
+    today = timezone.localdate()
+    sessions = []
+    for days_ago in (1, 0, 3):
+        session = start_session(athlete_a, date=today - timedelta(days=days_ago))
+        add_set(add_exercise(session, squats), Decimal("60"), 8)
+        finish_session(session)
+        sessions.append(session)
+
+    page = client_a.get(reverse("training:history")).content.decode()
+    positions = [page.index(reverse("training:session_detail", args=[s.pk])) for s in sessions]
+    assert positions[1] < positions[0] < positions[2]
+
+
+@pytest.mark.django_db
 def test_athlete_cannot_see_another_athletes_sessions(client_a, athlete_b, squats):
     theirs = logged_session(athlete_b, squats)
 

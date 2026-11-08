@@ -68,6 +68,8 @@ def history(request):
         Session.objects.filter(athlete=request.user, finished_at__isnull=False)
         .annotate(exercise_count=Count("exercises", distinct=True), set_count=Count("exercises__sets", distinct=True))
         .prefetch_related("exercises__exercise__category")
+        # Explicit: Django drops the model's default ordering in queries that count (GROUP BY).
+        .order_by("-date", "-created_at")
     )
     return render(request, "training/history.html", {"sessions": sessions, "open_session": open_session})
 

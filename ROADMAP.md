@@ -47,7 +47,7 @@ Bug list:
 - [ ] Friendly error pages: styled `404.html`, `403.html` and `500.html` with a way back to the history. Typing the address of an action (e.g. `/finish/`) leads back to the related page instead of an empty 405 page.
 - [x] Each exercise at most once per session. The exercise picker lists only exercises not yet in the session, and adding checks it again on the server (a stale page or double tap must not create a duplicate). To decide when planning: a database rule as well, and what happens when a plan contains the same exercise twice.
 - [x] Adding an exercise always redirects to the session log (today, weight exercises go straight to their sets page).
-- [ ] History lists sessions in the order they were logged. To decide when planning: newest or oldest first, and where a backdated session goes (today the list sorts by training date).
+- [x] History lists sessions newest first. The list was unsorted because Django drops the default ordering in queries that count; it now sorts by training date, then by logging time.
 - [ ] Session log shows which exercises are still open: open ones use the active card style (red border), done ones have their name greyed out a little. To decide when planning: when a weight exercise counts as done (after its first set, or only when the athlete marks it).
 
 Done when: you have logged real-looking sessions on your phone without surprises and a restore has worked.
