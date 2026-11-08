@@ -2,6 +2,7 @@ from datetime import timedelta
 from decimal import Decimal
 
 import pytest
+from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils import timezone
 
@@ -54,6 +55,19 @@ def test_login_with_email_and_logout(client, athlete_a):
 
     assert client.post(reverse("logout")).status_code == 302
     assert client.get(reverse("training:history")).status_code == 302
+
+
+@pytest.mark.django_db
+def test_email_is_case_insensitive(client):
+    user = User.objects.create_user(email="Anna@Club.DE", password="pw")
+    assert user.email == "anna@club.de"
+
+    response = client.post(reverse("login"), {"username": "ANNA@club.de", "password": "pw"})
+    assert response.status_code == 302
+
+    # The admin refuses a second account that differs only in capitals.
+    with pytest.raises(ValidationError):
+        User(email="anna@CLUB.de", password="x").full_clean()
 
 
 @pytest.mark.django_db

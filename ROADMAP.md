@@ -41,7 +41,7 @@ Goal: find the problems on your own machine before any server exists.
 
 Bug list:
 
-- [ ] Email login is case-sensitive: `Anna@club.de` and `anna@club.de` count as different accounts. Until fixed, create accounts in lowercase.
+- [x] Email login is case-sensitive: `Anna@club.de` and `anna@club.de` count as different accounts. Until fixed, create accounts in lowercase.
 - [ ] Session lifetimes: admin sessions last 30 minutes, athlete sessions 7 days. Both restart with every request. Admin and app share one cookie, so this needs a small piece of custom code, not just settings; to be planned with the owner.
 - [x] Auto-finish rule change: an open session closes automatically after 26 hours instead of 4. When auto-closed, its end time is stored as start + 3 hours. Update `CLAUDE.md` and the tests with it.
 - [ ] Friendly error pages: styled `404.html`, `403.html` and `500.html` with a way back to the history. Typing the address of an action (e.g. `/finish/`) leads back to the related page instead of an empty 405 page.

@@ -5,6 +5,15 @@ from django.db import models
 class UserManager(BaseUserManager):
     use_in_migrations = True
 
+    @classmethod
+    def normalize_email(cls, email):
+        """Store and look up emails in lowercase, so Anna@club.de and anna@club.de are one account."""
+        return super().normalize_email(email).strip().lower()
+
+    def get_by_natural_key(self, email):
+        # Called at login with the email as typed.
+        return self.get(email=self.normalize_email(email))
+
     def _create_user(self, email, password, **extra_fields):
         if not email:
             raise ValueError("An email address is required")
@@ -37,3 +46,8 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.get_full_name() or self.email
+
+    def save(self, *args, **kwargs):
+        # The admin forms normalize in clean(); this also covers code that skips it.
+        self.email = User.objects.normalize_email(self.email)
+        super().save(*args, **kwargs)
