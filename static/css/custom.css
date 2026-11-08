@@ -257,3 +257,9 @@ table.sets th:not(:first-child), table.sets td:not(:first-child) { text-align: r
   text-decoration: none;
 }
 .bottom-nav a.primary { background: var(--primary); color: var(--on-primary); }
+
+/* Legal pages and the links to them on the login page */
+.legal h2 { margin: 1.5rem 0 0.5rem; font-size: 1rem; font-weight: 700; }
+.legal p, .legal li { font-size: 0.9375rem; }
+.legal-links { margin-top: 2rem; color: var(--muted); font-size: 0.8125rem; text-align: center; }
+.legal-links a { color: var(--muted); }

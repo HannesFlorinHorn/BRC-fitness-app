@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy{% endblock %}
+{% block heading %}Privacy{% endblock %}
+
+{% block content %}
+  <div class="legal">
+    <p class="muted">Last updated: 9 November 2026</p>
+
+    <h2>1. Who is responsible</h2>
+    <p>
+      Hannes-Florin Horn, c/o Berliner Ruder-Club, Bismarckstr. 4, 14109 Berlin, Germany.
+      Email: <a href="mailto:hannesflorin@gmail.com">hannesflorin@gmail.com</a>.
+      This is a private project; it is not operated by the Berliner Ruder-Club.
+    </p>
+
+    <h2>2. What data is stored</h2>
+    <ul>
+      <li>Account: your name and email address. Your password is stored only as a secure hash, never in readable form.</li>
+      <li>Training data: the date of each session, the exercises, weights, repetitions and when a session was started and finished.</li>
+      <li>Technical data: when the app runs on a server, the server may briefly log your IP address and the pages requested, to keep the service running and secure.</li>
+    </ul>
+
+    <h2>3. Why, and on what legal basis</h2>
+    <p>
+      The data is used only to let you record your training and review your progress, and to let the coach follow the group's training.
+      The legal basis is your consent (Art. 6(1)(a) GDPR), given when your account is created.
+      You can withdraw your consent at any time by email; your data is then deleted.
+      Withdrawing does not affect the lawfulness of the processing before it.
+    </p>
+
+    <h2>4. Who can see your data</h2>
+    <ul>
+      <li>You: your own data only.</li>
+      <li>The coach, with a separate staff account: the training data of all athletes, read only.</li>
+      <li>The operator named above, as administrator of the app.</li>
+    </ul>
+    <p>Your data is not sold or passed on to third parties, and it is not used for advertising.</p>
+
+    <h2>5. Cookies</h2>
+    <p>
+      The app sets only the cookies it needs to work: one that keeps you logged in, and one that protects forms against misuse (CSRF protection).
+      There are no tracking or advertising cookies. Fonts and styles are served by the app itself; no data is sent to Google or other third parties when a page loads.
+    </p>
+
+    <h2>6. Hosting</h2>
+    <p>
+      The app will be hosted by a provider in Germany, who processes the data only on the operator's behalf.
+      This notice will name the provider once the app is online.
+    </p>
+
+    <h2>7. How long data is kept</h2>
+    <p>
+      Your data is kept as long as your account exists.
+      It is deleted when you ask for it, and at the latest when you leave the training group.
+      A login expires after a period without activity (7 days for athletes, 30 minutes for staff accounts).
+    </p>
+
+    <h2>8. Your rights</h2>
+    <p>
+      You have the right to access your data, to have it corrected or deleted, to restrict its processing,
+      to receive it in a common format, to object to its processing and to withdraw your consent.
+      Send an email to the address above.
+    </p>
+    <p>
+      You also have the right to complain to a data protection authority, for example the one responsible for the operator:
+      Die Landesbeauftragte für den Datenschutz und für das Recht auf Akteneinsicht Brandenburg (LDA Brandenburg).
+    </p>
+
+    <p><a href="{% url 'legal_notice' %}">Legal notice</a></p>
+  </div>
+  <a class="button secondary" href="{% url 'login' %}">Back</a>
+{% endblock %}

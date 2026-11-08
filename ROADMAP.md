@@ -32,7 +32,7 @@ Goal: find the problems on your own machine before any server exists.
 - [ ] Check login persistence on the phone (session stays valid across days; cookie lifetime set deliberately)
 - [ ] Confirm test accounts cannot see each other's data by trying direct URLs
 - [ ] Back up with `sqlite3 ... ".backup"`, delete the database, restore from the backup and check that the data is back
-- [ ] Legal pages and texts (details to be agreed with the owner)
+- [x] Legal pages and texts: legal notice (`/legal/`) and privacy notice (`/privacy/`) in English, readable without login, linked only from the login page. Drafted without legal advice; have them checked before go-live.
 - [ ] Consider dropping Pico.css (keeping only `custom.css`) if overriding its styles keeps causing trouble during phone testing
 - [ ] Short bug list written down and cleared
 
@@ -62,6 +62,7 @@ Goal: colleagues can reach it over HTTPS and start logging.
 - [ ] Limit failed login attempts (e.g. `django-axes`; new dependency, ask first)
 - [ ] Two-factor login for staff accounts (to be planned with the owner)
 - [ ] Move the admin away from the well-known `/admin/` address
+- [ ] Name the hosting provider in the privacy notice (section 6) and update its date; have both legal texts checked
 - [ ] Accounts created for colleagues, a one-page "how to log in" note, consent for storing their data
 
 Done when: every colleague has logged in on their phone and a nightly backup exists off the server.
@@ -122,5 +123,6 @@ Done when: every colleague has logged in on their phone and a nightly backup exi
 - 2026-11-08: Landing page, registration, feedback field and the open/done highlight on the session log move from 1.2 to **Milestone 2**.
 - 2026-11-09: **Login lifetime depends on the account, not the page** (admin and app share one cookie): staff accounts 30 minutes, athletes 7 days, both counted from the last request.
 - 2026-11-09: Buttons that change data stay POST-only. Opening their address directly redirects to the session log; `/logout/` opened directly does not log out (so other websites cannot log anyone out).
+- 2026-11-09: The app is a **private project of the owner**, not run by the club. Legal notice and privacy notice name the owner (c/o the club's address); legal basis is the athletes' consent; supervisory authority LDA Brandenburg. The links appear only on the login page.
 - Open: exact rules of Methode 1 and 2.
 - 2026-11-05: The athlete page for building own plans moves to **Milestone 2**. Until then, plans are created in the admin.

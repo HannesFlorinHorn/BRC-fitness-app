@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Legal notice{% endblock %}
+{% block heading %}Legal notice{% endblock %}
+
+{% block content %}
+  <div class="legal">
+    <p>Information according to § 5 DDG (German Digital Services Act)</p>
+
+    <h2>Responsible</h2>
+    <p>
+      Hannes-Florin Horn<br>
+      c/o Berliner Ruder-Club<br>
+      Bismarckstr. 4<br>
+      14109 Berlin<br>
+      Germany
+    </p>
+
+    <h2>Contact</h2>
+    <p>Email: <a href="mailto:hannesflorin@gmail.com">hannesflorin@gmail.com</a></p>
+
+    <h2>About this app</h2>
+    <p>
+      This training tracker is a private, non-commercial project for a small training group.
+      It is not operated by the Berliner Ruder-Club.
+    </p>
+
+    <p><a href="{% url 'privacy' %}">Privacy notice</a></p>
+  </div>
+  <a class="button secondary" href="{% url 'login' %}">Back</a>
+{% endblock %}

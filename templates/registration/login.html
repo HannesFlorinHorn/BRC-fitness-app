@@ -16,4 +16,8 @@
     <input type="hidden" name="next" value="{{ next }}">
     <button type="submit">Log in</button>
   </form>
+
+  <footer class="legal-links">
+    <a href="{% url 'legal_notice' %}">Legal notice</a> · <a href="{% url 'privacy' %}">Privacy</a>
+  </footer>
 {% endblock %}

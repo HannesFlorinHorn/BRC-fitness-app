@@ -373,3 +373,12 @@ def test_opening_logout_directly_keeps_you_logged_in(client_a):
 
 def exercise_order(session):
     return [logged.exercise.name for logged in session.exercises.all()]
+
+
+@pytest.mark.django_db
+def test_legal_pages_open_without_login_and_are_linked_from_the_login_page(client):
+    login_page = client.get(reverse("login")).content.decode()
+    for name, text in (("legal_notice", "Hannes-Florin Horn"), ("privacy", "LDA Brandenburg")):
+        assert reverse(name) in login_page
+        response = client.get(reverse(name))
+        assert response.status_code == 200 and text in response.content.decode()
