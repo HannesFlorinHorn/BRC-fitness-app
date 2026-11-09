@@ -66,17 +66,30 @@ Decided with the owner on 2026-11-09. The app **suggests**; athletes always log 
 - Ranges in the tables ("+2.5 to +5 kg"): the app suggests the **lower end**, i.e. the smaller change, and shows the range as a hint.
 - Weights are rounded **down** to **2.5 kg** steps (the smallest plate step).
 - Method 1: the next session's working weight (Set 3) is the **Set 4 weight** of the last session, changed by Table B using the **Set 4 reps**. Nothing else counts.
-- Method 2: one target for all 3 sets (10, 13, 15) at one weight. When the athlete saves the first set, the plan of the day (target reps and target weight) is stored with the exercise. The next session depends **only on the last session**, its plan and its sets. The rows are checked top to bottom; the first match wins:
+- Method 2: one target for all 3 sets (10, 13, 15) at one weight. When the athlete saves the first set, the plan of the day (target reps and target weight) is stored with the exercise. The next session depends **only on the last session**, its plan and its sets.
+
+  **First session** (nothing was planned yet, also for sessions logged before plans were stored):
+
+  | Last session | Next session |
+  | --- | --- |
+  | At least one set with 10 reps or more | the highest weight that had 10+ reps, target 10 |
+  | No set with 10 reps | the lowest weight −2.5 kg, target 15 |
+
+  **Every later session.** The rows are checked top to bottom; the first match wins:
 
   | # | Last session | Next session |
   | --- | --- | --- |
-  | 1 | A set with fewer than 10 reps | target one step down (15 → 13, 13 → 10); already at 10: weight −2.5 kg, target 10 |
-  | 2 | A set lighter than the target weight | same target, same weight |
-  | 3 | All 3 sets with 15 reps or more | weight +2.5 kg, target 10 (whatever the target was) |
-  | 4 | All 3 sets reach the target | next target (10 → 13 → 15), same weight |
-  | 5 | Anything else (fewer reps, fewer than 3 sets) | same target, same weight |
+  | 1 | Fewer than 3 sets | same plan |
+  | 2 | The 3 sets used different weights | same plan as the session before |
+  | 3 | All 3 sets below 10 reps | weight −2.5 kg, target 15 |
+  | 4 | One or two sets below 10 reps | target one step down (15 → 13, 13 → 10); at 10 the plan stays |
+  | 5 | All 3 sets with 15 reps or more | weight +2.5 kg, target 10 (whatever the target was) |
+  | 6 | All 3 sets with 13 reps or more | target 15 (13 can be skipped) |
+  | 7 | All 3 sets with 10 reps or more | target 13 if it was 10; otherwise the target stays |
 
-  Heavier sets count, but the next weight stays at the target weight. The first time, no weight is suggested; the lowest of the logged weights then counts as the target weight. Sessions logged before plans were stored (no plan): the lowest weight counts, and the weakest set sets the target (below 10: −2.5 kg and 10; 10 or more: 13; 13 or more: 15; 15 or more in all 3 sets: +2.5 kg and 10).
+  Rows 5 to 7: one step above the highest target all 3 sets reached, never below the current target. From row 3 on, the weight used in all 3 sets is the reference, even if it differs from the planned one (the athlete chose it on purpose).
+
+  Fallbacks: any case the rules do not cover keeps the plan of the last session; an unknown target counts as 10. If a calculation fails with an error, the sets page shows no suggestion and repeats the last set, like an exercise without a Methode; the error is written to the server log.
 - Method 1 warm-ups: the **first time** an exercise is logged, the athlete logs Sets 1 and 2 themselves (the info box gives about 50 % and 75 % of the working weight as a guide). Once there is an earlier session with at least 3 sets, the warm-ups are logged automatically when the athlete saves the working set (Set 3), from its weight. An exercise that is skipped therefore has no sets and is dropped at Finish.
 - Method 1 without a Set 4 last time: the working weight stays at the last Set 3 weight.
 - Exercises without a Methode keep the simple behaviour: the form is prefilled with the previous set.

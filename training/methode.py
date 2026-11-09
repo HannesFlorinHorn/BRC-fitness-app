@@ -6,11 +6,14 @@ athlete has logged. The functions below the database part only take lists
 of (weight, reps) pairs, so they can be tested against the coach's sheet.
 """
 
+import logging
 from dataclasses import dataclass, field
 from decimal import ROUND_FLOOR, Decimal
 from typing import NamedTuple
 
 from .models import Exercise, SessionExercise
+
+logger = logging.getLogger(__name__)
 
 PLATE_STEP = Decimal("2.5")
 
@@ -82,9 +85,18 @@ class Guide:
 
 
 def guide_for(logged):
-    """The guide for a logged exercise, or None if it has no Methode."""
+    """The guide for a logged exercise, or None if it has no Methode. If a
+    calculation fails, the page falls back to repeating the last set."""
     if logged.method is None or logged.exercise.tracking != Exercise.Tracking.SETS:
         return None
+    try:
+        return calculate_guide(logged)
+    except Exception:
+        logger.exception("Methode guide failed for logged exercise %s", logged.pk)
+        return None
+
+
+def calculate_guide(logged):
     today = [(s.weight_kg, s.reps) for s in logged.sets.all()]
     if logged.method == Exercise.Method.METHOD_1:
         history = [[(s.weight_kg, s.reps) for s in earlier.sets.all()] for earlier in earlier_sessions(logged)]
@@ -278,37 +290,40 @@ LOWER = Step(0, None, -METHOD_2_WEIGHT_STEP.change, -METHOD_2_WEIGHT_STEP.change
 
 def method_2_next(last):
     """The plan for the next session, and a short verdict on the last one.
-    The rows are checked top to bottom (docs/METHODE_RULES.md)."""
+    The rows are checked top to bottom (docs/METHODE_RULES.md). Any case the
+    rules do not cover keeps the plan of the last session."""
     sets = last.sets[:METHOD_2_SETS]
+    if not sets:
+        return Method2Plan(last.target or TARGETS[0], last.weight), "no sets"
+    weights = [w for w, _ in sets]
     reps = [r for _, r in sets]
-    lowest = min(w for w, _ in sets)
-    complete = len(sets) == METHOD_2_SETS
 
-    if last.target is None:
-        # No stored plan: the lowest weight is the reference, the weakest set sets the target.
-        if min(reps) < METHOD_2_MIN_REPS:
-            return Method2Plan(TARGETS[0], apply(lowest, LOWER), LOWER), f"a set below {METHOD_2_MIN_REPS} reps"
-        if not complete:
-            return Method2Plan(TARGETS[0], round_down(lowest)), "fewer than 3 sets"
-        if min(reps) >= TARGETS[-1]:
-            return Method2Plan(TARGETS[0], apply(lowest, RAISE), RAISE), f"{TARGETS[-1]} reached"
-        reached = max(t for t in TARGETS if t <= min(reps))
-        return Method2Plan(next_target(reached), round_down(lowest)), f"{reached} reached"
+    if last.weight is None:
+        # First session (or logged before plans were stored): nothing was planned.
+        start = [w for w, r in last.sets if r >= METHOD_2_MIN_REPS]
+        if start:
+            return Method2Plan(TARGETS[0], round_down(max(start))), "first session"
+        return Method2Plan(TARGETS[-1], apply(min(weights), LOWER), LOWER), f"no set with {METHOD_2_MIN_REPS} reps"
 
-    reference = last.weight if last.weight is not None else lowest
-    target = last.target
+    target = last.target if last.target in TARGETS else TARGETS[0]
+    same_plan = Method2Plan(target, round_down(last.weight))
+    if len(sets) < METHOD_2_SETS:
+        return same_plan, "fewer than 3 sets"
+    if len(set(weights)) > 1:
+        return same_plan, "different weights, plan kept"
+
+    weight = weights[0]  # the weight the athlete used in all 3 sets
+    if all(r < METHOD_2_MIN_REPS for r in reps):
+        return Method2Plan(TARGETS[-1], apply(weight, LOWER), LOWER), f"all sets below {METHOD_2_MIN_REPS} reps"
     if min(reps) < METHOD_2_MIN_REPS:
-        verdict = f"a set below {METHOD_2_MIN_REPS} reps"
-        if target == TARGETS[0]:
-            return Method2Plan(target, apply(reference, LOWER), LOWER), verdict
-        return Method2Plan(TARGETS[TARGETS.index(target) - 1], round_down(reference)), verdict
-    if not all(w >= reference for w, _ in sets):
-        return Method2Plan(target, round_down(reference)), f"a set below {kg(reference)}"
-    if complete and min(reps) >= TARGETS[-1]:
-        return Method2Plan(TARGETS[0], apply(reference, RAISE), RAISE), f"target {target} reached"
-    if complete and min(reps) >= target:
-        return Method2Plan(next_target(target), round_down(reference)), f"target {target} reached"
-    return Method2Plan(target, round_down(reference)), f"target {target} not reached"
+        lower = TARGETS[max(TARGETS.index(target) - 1, 0)]
+        return Method2Plan(lower, round_down(weight)), f"a set below {METHOD_2_MIN_REPS} reps"
+    if min(reps) >= TARGETS[-1]:
+        return Method2Plan(TARGETS[0], apply(weight, RAISE), RAISE), f"{TARGETS[-1]} reps reached"
+    # One step above the highest target all 3 sets reached, never below the current one.
+    reached = max(t for t in TARGETS if t <= min(reps))
+    verdict = f"target {target} {'reached' if min(reps) >= target else 'not reached'}"
+    return Method2Plan(max(next_target(reached), target), round_down(weight)), verdict
 
 
 def next_target(target):
@@ -320,6 +335,15 @@ def method_2_today(last):
     if last is None:
         return Method2Plan()
     return method_2_next(last)[0]
+
+
+def method_2_plan_to_store(logged):
+    """The plan stored with the first set; the starting plan if the calculation fails."""
+    try:
+        return method_2_today(method_2_last_session(logged))
+    except Exception:
+        logger.exception("Methode 2 plan failed for logged exercise %s", logged.pk)
+        return Method2Plan()
 
 
 def method_2_last_session(logged):

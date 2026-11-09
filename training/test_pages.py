@@ -406,9 +406,10 @@ def test_method_2_page_shows_todays_target(client_a, athlete_a):
 
     today = add_exercise(start_session(athlete_a), leg_curl)
     page = client_a.get(reverse("training:exercise_sets", args=[today.pk])).content.decode()
-    assert "Last time: 30 kg · 10 / 10 / 10 (target 10 reached)" in page
-    assert "Today: 3 sets × 13 reps at 30 kg" in page
-    assert 'value="30"' in page and 'value="13"' in page
+    # The earlier session was the first one: its weight with 10+ reps, target 10.
+    assert "Last time: 30 kg · 10 / 10 / 10 (first session)" in page
+    assert "Today: 3 sets × 10 reps at 30 kg" in page
+    assert 'value="30"' in page and 'value="10"' in page
 
 
 @pytest.mark.django_db

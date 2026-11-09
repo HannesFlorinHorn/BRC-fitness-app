@@ -77,7 +77,7 @@ def add_set(session_exercise, weight_kg, reps):
         number += 1
     if last is None and session_exercise.method == Exercise.Method.METHOD_2:
         # Remember today's plan; the next session is worked out from it.
-        plan = methode.method_2_today(methode.method_2_last_session(session_exercise))
+        plan = methode.method_2_plan_to_store(session_exercise)
         session_exercise.target_reps, session_exercise.target_weight = plan.target, plan.weight
         session_exercise.save(update_fields=["target_reps", "target_weight"])
     return ExerciseSet.objects.create(session_exercise=session_exercise, number=number, weight_kg=weight_kg, reps=reps)
