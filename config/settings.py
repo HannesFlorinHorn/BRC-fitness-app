@@ -28,11 +28,22 @@ def env_list(name):
     return [item.strip() for item in os.environ.get(name, "").split(",") if item.strip()]
 
 
+def is_weak_secret(key):
+    """The example key from .env.example, or one Django's deploy check calls weak."""
+    return key.startswith("change-me") or len(key) < 50 or len(set(key)) < 5
+
+
 SECRET_KEY = os.environ.get("SECRET_KEY")
 if not SECRET_KEY:
     raise ImproperlyConfigured("SECRET_KEY must be set in the environment or .env")
 
 DEBUG = env_bool("DEBUG", False)
+# Going live with the public example key would let anyone forge signed data,
+# so production refuses to start instead of only warning.
+if not DEBUG and is_weak_secret(SECRET_KEY):
+    raise ImproperlyConfigured(
+        "SECRET_KEY is too weak for DEBUG=false. Generate one with the command in .env.example."
+    )
 ALLOWED_HOSTS = env_list("ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
 
@@ -107,6 +118,19 @@ SESSION_SAVE_EVERY_REQUEST = True
 SESSION_COOKIE_SECURE = env_bool("SESSION_COOKIE_SECURE", True)
 CSRF_COOKIE_SECURE = env_bool("CSRF_COOKIE_SECURE", True)
 SESSION_COOKIE_HTTPONLY = True
+
+# HTTPS. In production Caddy handles HTTPS and passes requests on as plain
+# HTTP, noting the original scheme in X-Forwarded-Proto. Trusting that header
+# is only safe because Gunicorn is reachable through Caddy alone, never directly.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+# Caddy redirects to HTTPS too; this is the second safety net. Off locally (.env).
+SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", True)
+# Browsers remember "HTTPS only" for this long. Start low so a broken
+# certificate locks nobody out for long; raise to a year once stable (ROADMAP).
+SECURE_HSTS_SECONDS = 60 * 60  # 1 hour
+# Subdomains and the browsers' preload list stay off on purpose (the domain
+# may host other things; preload is hard to undo), so silence those warnings.
+SILENCED_SYSTEM_CHECKS = ["security.W005", "security.W021"]
 
 LANGUAGE_CODE = "en-gb"
 TIME_ZONE = "Europe/Berlin"

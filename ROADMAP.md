@@ -54,7 +54,8 @@ Done when: you have logged real-looking sessions on your phone without surprises
 
 Goal: colleagues can reach it over HTTPS and start logging.
 
-- [ ] Production settings from the environment: `DEBUG` off, strong `SECRET_KEY`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, secure cookies, proxy header setting
+- [x] Production settings from the environment: `DEBUG` off, strong `SECRET_KEY`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, secure cookies, proxy header setting
+- [ ] Raise HSTS (`SECURE_HSTS_SECONDS`) from 1 hour to 1 year once HTTPS has run stably for a few weeks
 - [ ] Gunicorn (few workers; SQLite allows one writer at a time) and WhiteNoise for static files
 - [ ] Docker Compose with Caddy and the app, database file and backups on a volume
 - [ ] Small EU VPS, domain, DNS, firewall, SSH keys only, automatic security updates
@@ -130,5 +131,6 @@ Done when: every colleague has logged in on their phone and a nightly backup exi
 - 2026-11-09: **Methode 2 rules refined** (see `docs/METHODE_RULES.md`): the first session sets the starting weight (highest weight with 10+ reps, target 10); targets can be skipped; all sets below 10 reps lower the weight and set target 15; different weights within a session keep the plan. Uncovered cases keep the plan, and a failing calculation falls back to repeating the last set.
 - 2026-11-09: **Methode exercises tick themselves done** after Set 4 (Methode 1) or Set 3 (Methode 2) and are greyed out in the session log. Sessions logged before this stay unticked.
 - 2026-11-09: **Milestone 1.2 done**: tested locally and on the phone, clean clone and backup/restore checked. Current milestone is now 1.3 (go live).
+- 2026-11-09: **Production settings**: HTTPS redirect and proxy header (Caddy in front, Gunicorn never exposed), HSTS starting at 1 hour without subdomains or preload, and the app refuses to start with a weak secret key when DEBUG is off.
 - Open: deload rules of Methode 1 and 2 (Milestone 2).
 - 2026-11-05: The athlete page for building own plans moves to **Milestone 2**. Until then, plans are created in the admin.
