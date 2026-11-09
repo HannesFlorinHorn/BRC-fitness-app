@@ -27,15 +27,15 @@ Done when: a full session can be recorded and found again in the history, and th
 Goal: find the problems on your own machine before any server exists.
 
 - [x] Run from a clean clone using only the commands in `CLAUDE.md`
-- [ ] Create 2-3 test athletes and one coach in the admin; log several realistic sessions
+- [x] Create 2-3 test athletes and one coach in the admin; log several realistic sessions
 - [x] Open the app on a real phone over the local network (`runserver 0.0.0.0:8000`, add your computer's LAN address to `ALLOWED_HOSTS`) in Safari and Chrome; fix layout and usability problems
-- [ ] Check login persistence on the phone (session stays valid across days; cookie lifetime set deliberately)
-- [ ] Confirm test accounts cannot see each other's data by trying direct URLs
-- [ ] Back up with `sqlite3 ... ".backup"`, delete the database, restore from the backup and check that the data is back
+- [x] Check login persistence on the phone (session stays valid across days; cookie lifetime set deliberately)
+- [x] Confirm test accounts cannot see each other's data by trying direct URLs
+- [x] Back up with `sqlite3 ... ".backup"`, delete the database, restore from the backup and check that the data is back
 - [x] Legal pages and texts: legal notice (`/legal/`) and privacy notice (`/privacy/`) in German, readable without login, linked only from the login page (link labels in English). Drafted without legal advice; have them checked before go-live.
 - [x] Consider dropping Pico.css (keeping only `custom.css`) if overriding its styles keeps causing trouble during phone testing. No trouble found; Pico stays.
 - [x] Methode 1 and 2: suggest weights and target reps on the sets page, following `docs/METHODE_RULES.md` (pulled forward from Milestone 2; deload weeks stay in Milestone 2)
-- [ ] Short bug list written down and cleared
+- [x] Short bug list written down and cleared
 
 Bug list:
 
