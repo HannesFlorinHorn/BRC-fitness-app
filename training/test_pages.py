@@ -133,11 +133,14 @@ def test_full_logging_flow(client_a, athlete_a, plan):
     page = client_a.get(response["Location"]).content.decode()
     assert "Squats" in page and "Planks" in page
 
-    # Squats is Methode 1: the first entry is the working set (with the comma a
-    # German phone keyboard types), and the two warm-ups are logged with it.
+    # Squats is Methode 1 and never logged before: the athlete logs the
+    # warm-ups too (with the comma a German phone keyboard types).
     squats = session.exercises.get(exercise__name="Squats")
     sets_url = reverse("training:exercise_sets", args=[squats.pk])
-    assert "No sessions yet:" in client_a.get(sets_url).content.decode()
+    page = client_a.get(sets_url).content.decode()
+    assert "No sessions yet:" in page and "Next: Set 1" in page and 'value="10"' in page
+    client_a.post(sets_url, {"weight_kg": "30", "reps": "10"})
+    client_a.post(sets_url, {"weight_kg": "45", "reps": "5"})
     assert client_a.post(sets_url, {"weight_kg": "62,5", "reps": "8"}).status_code == 302
     assert [(s.weight_display, s.reps) for s in squats.sets.all()] == [("30", 10), ("45", 5), ("62.5", 8)]
 

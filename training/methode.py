@@ -92,6 +92,14 @@ def guide_for(logged):
     return method_2_guide(history, today)
 
 
+def logs_warm_ups_itself(logged):
+    """Methode 1 warm-ups are logged with the working set once the exercise
+    has a full earlier session; the first time, the athlete logs them."""
+    if logged.method != Exercise.Method.METHOD_1:
+        return False
+    return any(len(earlier.sets.all()) >= 3 for earlier in earlier_sessions(logged))
+
+
 def earlier_sessions(logged):
     """The athlete's earlier logs of this exercise under the same Methode, oldest first."""
     session = logged.session
@@ -157,10 +165,11 @@ def warm_ups(working_weight):
 
 METHOD_1_INTRO = [
     "No sessions yet:",
-    "Set 1 · warm-up · 10 reps",
-    "Set 2 · warm-up · 5 reps",
+    "Set 1 · warm-up · 10 reps · about 50 % of your working weight",
+    "Set 2 · warm-up · 5 reps · about 75 % of your working weight",
     "Set 3 · working set · target 5–6 reps",
     "Set 4/5 · adjusted automatically",
+    "This time you log the warm-ups yourself; from the next session on they are calculated.",
 ]
 
 
@@ -197,29 +206,32 @@ def method_1_guide(history, today):
         guide.lines.append(f"Set 4: {reps} reps → Set 5 (optional): {kg(apply(weight, set_5))} ({change_text(set_5)})")
         guide.lines.append(f"Next session: Set 3 at {kg(apply(weight, next_session))} ({change_text(next_session)})")
 
-    guide.planned, guide.next = method_1_planned(today, working, show_warm_ups=bool(done))
+    guide.planned, guide.next = method_1_planned(today, working, known=bool(done))
     guide.prefill(today)
     return guide
 
 
-def method_1_planned(today, working, show_warm_ups):
-    """The sets still to come, and the one the form is for. With nothing
-    logged, the athlete's first entry is Set 3: the warm-ups are logged
-    automatically from its weight (services.add_set)."""
+def method_1_planned(today, working, known):
+    """The sets still to come, and the one the form is for. Once the working
+    weight is known from an earlier session, the athlete's first entry is
+    Set 3 and the warm-ups are logged with it (services.add_set). The first
+    time, the athlete logs the warm-ups first."""
     count = len(today)
     set_3 = PlannedSet(3, "working set · max reps", working)
     set_4 = PlannedSet(4, "adjusted after Set 3 · max reps")
-    if count == 0:
-        planned = []
-        if show_warm_ups:
-            planned = [
-                PlannedSet(number, "warm-up · logged with Set 3", weight, reps)
-                for number, (weight, reps) in enumerate(warm_ups(working), start=1)
-            ]
+    if count == 0 and known:
+        planned = [
+            PlannedSet(number, "warm-up · logged with Set 3", weight, reps)
+            for number, (weight, reps) in enumerate(warm_ups(working), start=1)
+        ]
         return planned + [set_3, set_4], set_3
-    if count == 1:  # only reached after deleting sets again
+    if count == 0:
+        set_1 = PlannedSet(1, "warm-up · about 50 % of your working weight", reps=WARM_UPS[0][0])
+        set_2 = PlannedSet(2, "warm-up · about 75 % of your working weight", reps=WARM_UPS[1][0])
+        return [set_1, set_2, set_3, set_4], set_1
+    if count == 1:
         weight = warm_ups(working)[1][0] if working is not None else None
-        set_2 = PlannedSet(2, "warm-up", weight, WARM_UPS[1][0])
+        set_2 = PlannedSet(2, "warm-up · about 75 % of your working weight", weight, WARM_UPS[1][0])
         return [set_2, set_3, set_4], set_2
     if count == 2:
         return [set_3, set_4], set_3

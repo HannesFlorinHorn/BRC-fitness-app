@@ -61,13 +61,14 @@ def move_exercise(session_exercise, offset):
 
 @transaction.atomic
 def add_set(session_exercise, weight_kg, reps):
-    """Log the next set. For Methode 1 the athlete's first entry is the working
-    set (Set 3); the two warm-ups are logged before it, worked out from its weight."""
+    """Log the next set. For Methode 1 with an earlier session, the athlete's
+    first entry is the working set (Set 3); the two warm-ups are logged before
+    it, worked out from its weight. The first time, the athlete logs them."""
     if session_exercise.exercise.tracking != Exercise.Tracking.SETS:
         raise ValueError("Tick-when-done exercises have no sets")
     last = session_exercise.sets.order_by("-number").first()
     number = last.number + 1 if last else 1
-    if last is None and session_exercise.method == Exercise.Method.METHOD_1:
+    if last is None and methode.logs_warm_ups_itself(session_exercise):
         for number, (warm_up_weight, warm_up_reps) in enumerate(methode.warm_ups(weight_kg), start=1):
             ExerciseSet.objects.create(
                 session_exercise=session_exercise, number=number, weight_kg=warm_up_weight, reps=warm_up_reps

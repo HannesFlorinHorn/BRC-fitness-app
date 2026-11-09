@@ -11,7 +11,7 @@
   {% endif %}
 
   {% include "training/_sets_table.html" with sets=sets planned=guide.planned %}
-  {% if logged.method == 1 and not sets %}
+  {% if guide.next.number == 3 and not sets %}
     <p class="muted">Enter your working set (Set 3). The warm-ups (Sets 1 and 2) are logged with it.</p>
   {% endif %}
 

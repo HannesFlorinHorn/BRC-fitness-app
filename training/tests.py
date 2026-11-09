@@ -337,10 +337,16 @@ def test_method_1_without_set_4_keeps_the_set_3_weight():
     assert methode.method_1_working_weight(warmed_up((60, 8)))[0] == 60
 
 
-def test_method_1_first_time_explains_the_sets():
+def test_method_1_first_time_the_athlete_logs_the_warm_ups():
     guide = methode.method_1_guide([], [])
     assert guide.lines == methode.METHOD_1_INTRO
-    assert guide.next.number == 3 and guide.weight is None and guide.reps is None
+    assert [(s.number, s.reps) for s in guide.planned] == [(1, 10), (2, 5), (3, None), (4, None)]
+    assert (guide.next.number, guide.weight, guide.reps) == (1, None, 10)
+
+    guide = methode.method_1_guide([], sets((30, 10)))
+    assert (guide.next.number, guide.reps) == (2, 5)
+    guide = methode.method_1_guide([], sets((30, 10), (45, 5)))
+    assert guide.next.number == 3
 
 
 def test_method_1_guide_through_a_session():
@@ -396,7 +402,14 @@ def test_method_2_guide():
 
 
 @pytest.mark.django_db
-def test_method_1_working_set_brings_its_warm_ups(athlete, squat, pushups):
+def test_method_1_working_set_brings_its_warm_ups_once_logged_before(athlete, squat, pushups):
+    # The first time, every set is logged by the athlete.
+    first = add_exercise(start_session(athlete, date=timezone.localdate() - timedelta(days=7)), squat)
+    for weight, reps in ((25, 10), (37.5, 5), (50, 6)):
+        add_set(first, Decimal(str(weight)), reps)
+    assert [s.number for s in first.sets.all()] == [1, 2, 3]
+    finish_session(first.session)
+
     logged = add_exercise(start_session(athlete), squat)
     add_set(logged, Decimal("60"), 6)
     add_set(logged, Decimal("62.5"), 5)

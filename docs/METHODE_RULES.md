@@ -67,7 +67,7 @@ Decided with the owner on 2026-11-09. The app **suggests**; athletes always log 
 - Weights are rounded **down** to **2.5 kg** steps (the smallest plate step).
 - Method 1: the next session's working weight (Set 3) is the **Set 4 weight** of the last session, changed by Table B using the **Set 4 reps**. Nothing else counts.
 - Method 2: one target for all 3 sets (10, 13, 15). All 3 sets reach it: next session moves to the next target; after 15 the weight goes up and the target is 10 again. Otherwise the same target and weight are repeated.
-- Method 1 warm-ups are logged automatically when the athlete saves the working set (Set 3), from its weight. An exercise that is skipped therefore has no sets and is dropped at Finish.
+- Method 1 warm-ups: the **first time** an exercise is logged, the athlete logs Sets 1 and 2 themselves (the info box gives about 50 % and 75 % of the working weight as a guide). Once there is an earlier session with at least 3 sets, the warm-ups are logged automatically when the athlete saves the working set (Set 3), from its weight. An exercise that is skipped therefore has no sets and is dropped at Finish.
 - Method 1 without a Set 4 last time: the working weight stays at the last Set 3 weight.
 - Exercises without a Methode keep the simple behaviour: the form is prefilled with the previous set.
 - Deload weeks (both Methods) are **not** in the app yet; they come in Milestone 2.
