@@ -86,10 +86,17 @@ def guide_for(logged):
     if logged.method is None or logged.exercise.tracking != Exercise.Tracking.SETS:
         return None
     today = [(s.weight_kg, s.reps) for s in logged.sets.all()]
-    history = [[(s.weight_kg, s.reps) for s in earlier.sets.all()] for earlier in earlier_sessions(logged)]
     if logged.method == Exercise.Method.METHOD_1:
+        history = [[(s.weight_kg, s.reps) for s in earlier.sets.all()] for earlier in earlier_sessions(logged)]
         return method_1_guide(history, today)
-    return method_2_guide(history, today)
+    return method_2_guide(method_2_last_session(logged), today, stored_plan(logged))
+
+
+def stored_plan(logged):
+    if logged.target_reps is None:
+        return None
+    last = method_2_last_session(logged)
+    return Method2Plan(logged.target_reps, logged.target_weight, method_2_today(last).change if last else None)
 
 
 def logs_warm_ups_itself(logged):
@@ -245,58 +252,110 @@ def method_1_planned(today, working, known):
 
 
 # Methode 2: 3 sets with one target (10, 13, 15); after 15 the weight goes up.
+# The plan of the day (target reps and weight) is stored with the first set,
+# so the next session depends only on the last one: its plan and its sets.
+
+METHOD_2_MIN_REPS = 10  # a set below this: the target goes one step down
 
 
 @dataclass
-class Method2State:
+class Method2Plan:
     target: int = TARGETS[0]
-    weight: Decimal | None = None
-    raised: bool = False  # weight went up for this session
+    weight: Decimal | None = None  # None: first time, the athlete picks it
+    change: Step | None = None  # weight change against the last session, for the info box
 
 
-def method_2_next(state, sets):
-    """The state after one more logged session."""
-    weight = sets[0][0]
-    reached = len(sets) >= METHOD_2_SETS and all(reps >= state.target for _, reps in sets[:METHOD_2_SETS])
-    if not reached:
-        return Method2State(state.target, round_down(weight))
-    if state.target == TARGETS[-1]:
-        return Method2State(TARGETS[0], apply(weight, METHOD_2_WEIGHT_STEP), raised=True)
-    return Method2State(TARGETS[TARGETS.index(state.target) + 1], round_down(weight))
+@dataclass
+class LastSession:
+    sets: list
+    target: int | None  # None: logged before plans were stored
+    weight: Decimal | None
 
 
-def method_2_state(history):
-    state = Method2State()
-    for sets in history:
+RAISE = METHOD_2_WEIGHT_STEP
+LOWER = Step(0, None, -METHOD_2_WEIGHT_STEP.change, -METHOD_2_WEIGHT_STEP.change)
+
+
+def method_2_next(last):
+    """The plan for the next session, and a short verdict on the last one.
+    The rows are checked top to bottom (docs/METHODE_RULES.md)."""
+    sets = last.sets[:METHOD_2_SETS]
+    reps = [r for _, r in sets]
+    lowest = min(w for w, _ in sets)
+    complete = len(sets) == METHOD_2_SETS
+
+    if last.target is None:
+        # No stored plan: the lowest weight is the reference, the weakest set sets the target.
+        if min(reps) < METHOD_2_MIN_REPS:
+            return Method2Plan(TARGETS[0], apply(lowest, LOWER), LOWER), f"a set below {METHOD_2_MIN_REPS} reps"
+        if not complete:
+            return Method2Plan(TARGETS[0], round_down(lowest)), "fewer than 3 sets"
+        if min(reps) >= TARGETS[-1]:
+            return Method2Plan(TARGETS[0], apply(lowest, RAISE), RAISE), f"{TARGETS[-1]} reached"
+        reached = max(t for t in TARGETS if t <= min(reps))
+        return Method2Plan(next_target(reached), round_down(lowest)), f"{reached} reached"
+
+    reference = last.weight if last.weight is not None else lowest
+    target = last.target
+    if min(reps) < METHOD_2_MIN_REPS:
+        verdict = f"a set below {METHOD_2_MIN_REPS} reps"
+        if target == TARGETS[0]:
+            return Method2Plan(target, apply(reference, LOWER), LOWER), verdict
+        return Method2Plan(TARGETS[TARGETS.index(target) - 1], round_down(reference)), verdict
+    if not all(w >= reference for w, _ in sets):
+        return Method2Plan(target, round_down(reference)), f"a set below {kg(reference)}"
+    if complete and min(reps) >= TARGETS[-1]:
+        return Method2Plan(TARGETS[0], apply(reference, RAISE), RAISE), f"target {target} reached"
+    if complete and min(reps) >= target:
+        return Method2Plan(next_target(target), round_down(reference)), f"target {target} reached"
+    return Method2Plan(target, round_down(reference)), f"target {target} not reached"
+
+
+def next_target(target):
+    return TARGETS[min(TARGETS.index(target) + 1, len(TARGETS) - 1)]
+
+
+def method_2_today(last):
+    """Today's plan from the last session, or the starting plan the first time."""
+    if last is None:
+        return Method2Plan()
+    return method_2_next(last)[0]
+
+
+def method_2_last_session(logged):
+    """The most recent earlier log of this exercise that has sets."""
+    for earlier in reversed(list(earlier_sessions(logged))):
+        sets = [(s.weight_kg, s.reps) for s in earlier.sets.all()]
         if sets:
-            state = method_2_next(state, sets)
-    return state
+            return LastSession(sets, earlier.target_reps, earlier.target_weight)
+    return None
 
 
-def method_2_guide(history, today):
+def method_2_guide(last, today, stored=None):
+    """stored: today's plan once the first set is saved (it wins over a recalculation)."""
     guide = Guide()
-    logged = [sets for sets in history if sets]
-    state = method_2_state(logged)
-    if not logged:
+    plan = stored or method_2_today(last)
+    if last is None:
         guide.lines.append(f"No sessions yet: {METHOD_2_SETS} sets × {TARGETS[0]} reps at a moderate weight.")
     else:
-        previous = method_2_state(logged[:-1])
-        last = logged[-1]
-        reps = " / ".join(str(r) for _, r in last)
-        reached = "reached" if method_2_next(previous, last).target != previous.target else "not reached"
-        guide.lines.append(f"Last time: {kg(last[0][0])} · {reps} (target {previous.target} {reached})")
-        today_text = f"Today: {METHOD_2_SETS} sets × {state.target} reps at {kg(state.weight)}"
-        if state.raised:
-            today_text += f" ({change_text(METHOD_2_WEIGHT_STEP)})"
+        verdict = method_2_next(last)[1]
+        weights = [w for w, _ in last.sets]
+        weight_text = kg(weights[0]) if len(set(weights)) == 1 else " / ".join(plain(w) for w in weights) + " kg"
+        reps = " / ".join(str(r) for _, r in last.sets)
+        guide.lines.append(f"Last time: {weight_text} · {reps} ({verdict})")
+    if plan.weight is not None:
+        today_text = f"Today: {METHOD_2_SETS} sets × {plan.target} reps at {kg(plan.weight)}"
+        if plan.change is not None:
+            today_text += f" ({change_text(plan.change)})"
         guide.lines.append(today_text)
 
     if len(today) >= METHOD_2_SETS:
-        upcoming = method_2_next(state, today)
+        upcoming = method_2_next(LastSession(today, plan.target, plan.weight))[0]
         guide.lines.append(f"Next session: {METHOD_2_SETS} × {upcoming.target} reps at {kg(upcoming.weight)}")
 
-    weight = today[-1][0] if today else state.weight
+    weight = today[-1][0] if today else plan.weight
     guide.planned = [
-        PlannedSet(number, f"target {state.target} reps", weight, state.target)
+        PlannedSet(number, f"target {plan.target} reps", weight, plan.target)
         for number in range(len(today) + 1, METHOD_2_SETS + 1)
     ]
     guide.next = guide.planned[0] if guide.planned else None

@@ -41,7 +41,7 @@ class ExerciseSetInline(admin.TabularInline):
 @admin.register(SessionExercise)
 class SessionExerciseAdmin(admin.ModelAdmin):
     list_display = ("session", "order", "exercise", "method")
-    readonly_fields = ("method",)
+    readonly_fields = ("method", "target_reps", "target_weight")
     list_select_related = ("session__athlete", "exercise")
     inlines = [ExerciseSetInline]
 

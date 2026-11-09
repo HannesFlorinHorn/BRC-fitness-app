@@ -31,7 +31,7 @@ All primary keys of Session, SessionExercise and ExerciseSet are UUIDs (cheap no
 - `Plan` (session template): name, owner (FK to user; empty = club plan), is_active. Club plans (seed: Legs, Arms, Core) are maintained by the coach in the admin; athletes can build their own. Read plans with `Plan.objects.visible_to(user)` and edit only `Plan.objects.owned_by(user)`.
 - `PlanExercise`: plan, exercise, position. The same exercise can appear in any number of plans.
 - `Session`: athlete (FK to user), date, notes, created_at, finished_at (empty while the session is still running). No stored categories and no title: the label is derived from the categories of its exercises (e.g. "Legs · Arms").
-- `SessionExercise`: session, exercise, order (athletes may swap it), method, is_done (only for `check` exercises). `method` is a snapshot copied automatically from the exercise when it is logged (never chosen by the athlete), so changing a catalog exercise's Methode does not rewrite past sessions.
+- `SessionExercise`: session, exercise, order (athletes may swap it), method, is_done (only for `check` exercises). `method` is a snapshot copied automatically from the exercise when it is logged (never chosen by the athlete), so changing a catalog exercise's Methode does not rewrite past sessions. For Methode 2, `target_reps` and `target_weight` store the plan of the day when the first set is saved (also never chosen by the athlete); the next session is worked out from it.
 - `ExerciseSet`: session_exercise, number, weight_kg (decimal), reps (positive integer)
 
 Do not name a model `Set` (it clashes with Python's `set`).

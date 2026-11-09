@@ -126,5 +126,6 @@ Done when: every colleague has logged in on their phone and a nightly backup exi
 - 2026-11-09: Buttons that change data stay POST-only. Opening their address directly redirects to the session log; `/logout/` opened directly does not log out (so other websites cannot log anyone out).
 - 2026-11-09: The app is a **private project of the owner**, not run by the club. Legal notice and privacy notice name the owner (c/o the club's address); legal basis is the athletes' consent; supervisory authority LDA Brandenburg. The links appear only on the login page. The two legal pages are in **German**; the rest of the UI stays English.
 - 2026-11-09: **Methode rules written down** in `docs/METHODE_RULES.md`. The app suggests (never enforces): lower end of each range, 2.5 kg steps rounded down. The logic moves into Milestone 1.2; deload weeks stay in Milestone 2.
+- 2026-11-09: **Methode 2 depends only on the last session.** Its plan of the day (target reps and weight) is stored with the first set. All sets at 15+ reps raise the weight at once; a set below 10 reps lowers the target one step (at 10: −2.5 kg); a lighter set means the plan is repeated.
 - Open: deload rules of Methode 1 and 2 (Milestone 2).
 - 2026-11-05: The athlete page for building own plans moves to **Milestone 2**. Until then, plans are created in the admin.

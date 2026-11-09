@@ -375,30 +375,93 @@ def test_method_1_guide_through_a_session():
 
 def test_method_2_follows_the_sheet_example():
     # Sessions 1-7 of the sheet's example; the app raises by +2.5 kg (lower end) instead of +5.
-    history = [sets((25, 10), (25, 10), (25, 10)), sets((25, 13), (25, 13), (25, 13)),
-               sets((25, 15), (25, 15), (25, 15)), sets((27.5, 10), (27.5, 10), (27.5, 10)),
-               sets((27.5, 13), (27.5, 13), (27.5, 13)), sets((27.5, 15), (27.5, 13), (27.5, 10)),
-               sets((27.5, 15), (27.5, 15), (27.5, 15))]
-    targets = [(methode.method_2_state(history[:n]).target, methode.method_2_state(history[:n]).weight)
-               for n in range(1, len(history) + 1)]
-    assert targets == [(13, 25), (15, 25), (10, Decimal("27.5")), (13, Decimal("27.5")),
+    plan = methode.Method2Plan()
+    results = []
+    for weight, reps in ((25, (10, 10, 10)), (25, (13, 13, 13)), (25, (15, 15, 15)), (27.5, (10, 10, 10)),
+                         (27.5, (13, 13, 13)), (27.5, (15, 13, 10)), (27.5, (15, 15, 15))):
+        last = methode.LastSession(sets(*((weight, r) for r in reps)), plan.target, plan.weight)
+        plan = methode.method_2_next(last)[0]
+        results.append((plan.target, plan.weight))
+    assert results == [(13, 25), (15, 25), (10, Decimal("27.5")), (13, Decimal("27.5")),
                        (15, Decimal("27.5")), (15, Decimal("27.5")), (10, 30)]
 
 
-def test_method_2_guide():
-    assert methode.method_2_guide([], []).lines == ["No sessions yet: 3 sets × 10 reps at a moderate weight."]
-    assert methode.method_2_guide([], []).reps == 10
+def method_2(target, weight, *logged):
+    """The next plan after a session with a stored plan."""
+    last = methode.LastSession(sets(*logged), target, None if weight is None else Decimal(str(weight)))
+    plan, verdict = methode.method_2_next(last)
+    return plan.target, plan.weight, verdict
 
-    history = [sets((30, 10), (30, 10), (30, 10)), sets((30, 13), (30, 13), (30, 13)),
-               sets((30, 15), (30, 13), (30, 10))]
-    guide = methode.method_2_guide(history, [])
+
+@pytest.mark.parametrize(
+    "target, weight, logged, expected",
+    [
+        # Far beyond the target: the weight goes up straight away.
+        (13, 25, ((25, 18), (25, 19), (25, 17)), (10, Decimal("27.5"), "target 13 reached")),
+        # A set below 10 reps: one target step down; at 10 the weight goes down.
+        (15, 30, ((30, 15), (30, 13), (30, 9)), (13, 30, "a set below 10 reps")),
+        (13, 30, ((30, 13), (30, 9), (30, 9)), (10, 30, "a set below 10 reps")),
+        (10, 30, ((30, 10), (30, 10), (30, 8)), (10, Decimal("27.5"), "a set below 10 reps")),
+        # Exactly 10 is not below 10.
+        (15, 30, ((30, 15), (30, 13), (30, 10)), (15, 30, "target 15 not reached")),
+        # A lighter set does not count; a heavier one does, but the weight stays.
+        (15, 30, ((30, 15), (30, 15), (25, 15)), (15, 30, "a set below 30 kg")),
+        (13, 30, ((30, 13), (32.5, 13), (32.5, 13)), (15, 30, "target 13 reached")),
+        # Fewer than 3 sets: same plan again.
+        (13, 30, ((30, 13), (30, 13)), (13, 30, "target 13 not reached")),
+        # First time (no weight planned): the lowest weight is the reference.
+        (10, None, ((30, 10), (27.5, 10), (30, 10)), (13, Decimal("27.5"), "target 10 reached")),
+    ],
+)
+def test_method_2_next_session_depends_only_on_the_last_one(target, weight, logged, expected):
+    assert method_2(target, weight, *logged) == expected
+
+
+@pytest.mark.parametrize(
+    "logged, expected",
+    [
+        (((30, 13), (30, 14), (30, 13)), (15, 30)),
+        (((30, 11), (30, 14), (30, 13)), (13, 30)),
+        (((30, 15), (25, 16), (30, 15)), (10, Decimal("27.5"))),
+        (((30, 12), (30, 9), (30, 12)), (10, Decimal("27.5"))),
+        (((30, 15), (30, 15)), (10, 30)),
+    ],
+)
+def test_method_2_without_a_stored_plan_uses_the_reps(logged, expected):
+    assert method_2(None, None, *logged)[:2] == expected
+
+
+def test_method_2_guide():
+    assert methode.method_2_guide(None, []).lines == ["No sessions yet: 3 sets × 10 reps at a moderate weight."]
+    assert methode.method_2_guide(None, []).reps == 10
+
+    last = methode.LastSession(sets((30, 15), (30, 13), (30, 10)), 15, Decimal("30"))
+    guide = methode.method_2_guide(last, [])
     assert guide.lines == ["Last time: 30 kg · 15 / 13 / 10 (target 15 not reached)",
                            "Today: 3 sets × 15 reps at 30 kg"]
     assert [(s.number, s.weight, s.reps) for s in guide.planned] == [(1, 30, 15), (2, 30, 15), (3, 30, 15)]
 
-    guide = methode.method_2_guide(history, sets((30, 15), (30, 15), (30, 15)))
+    guide = methode.method_2_guide(last, sets((30, 15), (30, 15), (30, 15)))
     assert guide.lines[-1] == "Next session: 3 × 10 reps at 32.5 kg"
     assert guide.next is None
+
+    mixed = methode.LastSession(sets((30, 15), (30, 15), (25, 15)), 15, Decimal("30"))
+    assert methode.method_2_guide(mixed, []).lines[0] == "Last time: 30 / 30 / 25 kg · 15 / 15 / 15 (a set below 30 kg)"
+
+
+@pytest.mark.django_db
+def test_method_2_first_set_stores_the_plan_of_the_day(athlete, lunge):
+    first = add_exercise(start_session(athlete, date=timezone.localdate() - timedelta(days=7)), lunge)
+    for _ in range(3):
+        add_set(first, Decimal("30"), 13)
+    first.refresh_from_db()
+    assert (first.target_reps, first.target_weight) == (10, None)
+    finish_session(first.session)
+
+    today = add_exercise(start_session(athlete), lunge)
+    add_set(today, Decimal("30"), 13)
+    today.refresh_from_db()
+    assert (today.target_reps, today.target_weight) == (13, 30)
 
 
 @pytest.mark.django_db

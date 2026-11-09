@@ -63,7 +63,8 @@ def move_exercise(session_exercise, offset):
 def add_set(session_exercise, weight_kg, reps):
     """Log the next set. For Methode 1 with an earlier session, the athlete's
     first entry is the working set (Set 3); the two warm-ups are logged before
-    it, worked out from its weight. The first time, the athlete logs them."""
+    it, worked out from its weight. The first time, the athlete logs them.
+    For Methode 2 the first set also stores the plan of the day."""
     if session_exercise.exercise.tracking != Exercise.Tracking.SETS:
         raise ValueError("Tick-when-done exercises have no sets")
     last = session_exercise.sets.order_by("-number").first()
@@ -74,6 +75,11 @@ def add_set(session_exercise, weight_kg, reps):
                 session_exercise=session_exercise, number=number, weight_kg=warm_up_weight, reps=warm_up_reps
             )
         number += 1
+    if last is None and session_exercise.method == Exercise.Method.METHOD_2:
+        # Remember today's plan; the next session is worked out from it.
+        plan = methode.method_2_today(methode.method_2_last_session(session_exercise))
+        session_exercise.target_reps, session_exercise.target_weight = plan.target, plan.weight
+        session_exercise.save(update_fields=["target_reps", "target_weight"])
     return ExerciseSet.objects.create(session_exercise=session_exercise, number=number, weight_kg=weight_kg, reps=reps)
 
 

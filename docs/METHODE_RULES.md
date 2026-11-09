@@ -66,7 +66,17 @@ Decided with the owner on 2026-11-09. The app **suggests**; athletes always log 
 - Ranges in the tables ("+2.5 to +5 kg"): the app suggests the **lower end**, i.e. the smaller change, and shows the range as a hint.
 - Weights are rounded **down** to **2.5 kg** steps (the smallest plate step).
 - Method 1: the next session's working weight (Set 3) is the **Set 4 weight** of the last session, changed by Table B using the **Set 4 reps**. Nothing else counts.
-- Method 2: one target for all 3 sets (10, 13, 15). All 3 sets reach it: next session moves to the next target; after 15 the weight goes up and the target is 10 again. Otherwise the same target and weight are repeated.
+- Method 2: one target for all 3 sets (10, 13, 15) at one weight. When the athlete saves the first set, the plan of the day (target reps and target weight) is stored with the exercise. The next session depends **only on the last session**, its plan and its sets. The rows are checked top to bottom; the first match wins:
+
+  | # | Last session | Next session |
+  | --- | --- | --- |
+  | 1 | A set with fewer than 10 reps | target one step down (15 → 13, 13 → 10); already at 10: weight −2.5 kg, target 10 |
+  | 2 | A set lighter than the target weight | same target, same weight |
+  | 3 | All 3 sets with 15 reps or more | weight +2.5 kg, target 10 (whatever the target was) |
+  | 4 | All 3 sets reach the target | next target (10 → 13 → 15), same weight |
+  | 5 | Anything else (fewer reps, fewer than 3 sets) | same target, same weight |
+
+  Heavier sets count, but the next weight stays at the target weight. The first time, no weight is suggested; the lowest of the logged weights then counts as the target weight. Sessions logged before plans were stored (no plan): the lowest weight counts, and the weakest set sets the target (below 10: −2.5 kg and 10; 10 or more: 13; 13 or more: 15; 15 or more in all 3 sets: +2.5 kg and 10).
 - Method 1 warm-ups: the **first time** an exercise is logged, the athlete logs Sets 1 and 2 themselves (the info box gives about 50 % and 75 % of the working weight as a guide). Once there is an earlier session with at least 3 sets, the warm-ups are logged automatically when the athlete saves the working set (Set 3), from its weight. An exercise that is skipped therefore has no sets and is dropped at Finish.
 - Method 1 without a Set 4 last time: the working weight stays at the last Set 3 weight.
 - Exercises without a Methode keep the simple behaviour: the form is prefilled with the previous set.

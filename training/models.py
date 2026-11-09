@@ -153,6 +153,10 @@ class SessionExercise(models.Model):
     method = models.PositiveSmallIntegerField(choices=Exercise.Method.choices, null=True, editable=False)
     # Only used by "tick when done" exercises; set-based ones count as done once they have sets.
     is_done = models.BooleanField(default=False)
+    # Methode 2 plan of the day, stored with the first set (training/methode.py).
+    # The next session is worked out from this plan and the logged sets alone.
+    target_reps = models.PositiveSmallIntegerField(null=True, editable=False)
+    target_weight = models.DecimalField(max_digits=6, decimal_places=2, null=True, editable=False)
 
     class Meta:
         ordering = ["order"]
