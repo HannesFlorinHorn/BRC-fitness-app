@@ -26,7 +26,7 @@ Done when: a full session can be recorded and found again in the history, and th
 
 Goal: find the problems on your own machine before any server exists.
 
-- [ ] Run from a clean clone using only the commands in `CLAUDE.md`
+- [x] Run from a clean clone using only the commands in `CLAUDE.md`
 - [ ] Create 2-3 test athletes and one coach in the admin; log several realistic sessions
 - [x] Open the app on a real phone over the local network (`runserver 0.0.0.0:8000`, add your computer's LAN address to `ALLOWED_HOSTS`) in Safari and Chrome; fix layout and usability problems
 - [ ] Check login persistence on the phone (session stays valid across days; cookie lifetime set deliberately)

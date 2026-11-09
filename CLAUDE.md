@@ -46,7 +46,7 @@ Do not name a model `Set` (it clashes with Python's `set`).
 ## Commands
 
 ```
-python -m venv .venv && source .venv/bin/activate
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
 python manage.py migrate
