@@ -34,7 +34,7 @@ Goal: find the problems on your own machine before any server exists.
 - [ ] Back up with `sqlite3 ... ".backup"`, delete the database, restore from the backup and check that the data is back
 - [x] Legal pages and texts: legal notice (`/legal/`) and privacy notice (`/privacy/`) in German, readable without login, linked only from the login page (link labels in English). Drafted without legal advice; have them checked before go-live.
 - [x] Consider dropping Pico.css (keeping only `custom.css`) if overriding its styles keeps causing trouble during phone testing. No trouble found; Pico stays.
-- [ ] Methode 1 and 2: suggest weights and target reps on the sets page, following `docs/METHODE_RULES.md` (pulled forward from Milestone 2; deload weeks stay in Milestone 2)
+- [x] Methode 1 and 2: suggest weights and target reps on the sets page, following `docs/METHODE_RULES.md` (pulled forward from Milestone 2; deload weeks stay in Milestone 2)
 - [ ] Short bug list written down and cleared
 
 Bug list:

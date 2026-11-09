@@ -272,3 +272,6 @@ table.sets th:not(:first-child), table.sets td:not(:first-child) { text-align: r
   text-align: center;
 }
 .legal-links a { color: var(--muted); }
+
+/* Sets the Methode suggests but nobody has logged yet */
+table.sets tr.planned td { color: var(--muted); font-weight: 400; }

@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from accounts.models import User
-from training.models import Exercise, Plan, Session
+from training.models import Category, Exercise, Plan, Session
 from training.services import add_exercise, add_set, finish_session, start_session
 
 
@@ -31,7 +31,8 @@ def client_a(client, athlete_a):
 
 @pytest.fixture
 def squats():
-    return Exercise.objects.get(name="Squats")
+    # No Methode, so tests about other topics get no warm-ups or suggestions.
+    return Exercise.objects.create(name="Box squats", category=Category.objects.get(name="legs"))
 
 
 def logged_session(athlete, exercise, finish=True):
@@ -86,7 +87,7 @@ def test_history_shows_own_sessions_and_detail(client_a, athlete_a, squats):
     assert "Legs" in history and "1 exercise · 1 set" in history
 
     detail = client_a.get(reverse("training:session_detail", args=[session.pk])).content.decode()
-    assert "Squats" in detail and "62.5 kg" in detail
+    assert "Box squats" in detail and "62.5 kg" in detail
 
 
 @pytest.mark.django_db
@@ -132,20 +133,24 @@ def test_full_logging_flow(client_a, athlete_a, plan):
     page = client_a.get(response["Location"]).content.decode()
     assert "Squats" in page and "Planks" in page
 
-    # First set, with the comma a German phone keyboard types.
+    # Squats is Methode 1: the first entry is the working set (with the comma a
+    # German phone keyboard types), and the two warm-ups are logged with it.
     squats = session.exercises.get(exercise__name="Squats")
     sets_url = reverse("training:exercise_sets", args=[squats.pk])
+    assert "No sessions yet:" in client_a.get(sets_url).content.decode()
     assert client_a.post(sets_url, {"weight_kg": "62,5", "reps": "8"}).status_code == 302
+    assert [(s.weight_display, s.reps) for s in squats.sets.all()] == [("30", 10), ("45", 5), ("62.5", 8)]
 
-    # The form comes back prefilled with the previous set.
+    # Set 4 is suggested from the Set 3 reps (Table A: 8 reps, +2.5 kg).
     page = client_a.get(sets_url).content.decode()
-    assert 'value="62.5"' in page and 'value="8"' in page
-    client_a.post(sets_url, {"weight_kg": "62.5", "reps": "6"})
+    assert "Set 3: 8 reps → Set 4: 65 kg" in page and 'value="65"' in page
+    client_a.post(sets_url, {"weight_kg": "65", "reps": "6"})
+    assert "Next session: Set 3 at 67.5 kg" in client_a.get(sets_url).content.decode()
     client_a.post(sets_url, {"weight_kg": "99", "reps": "1"})
 
     # A typo is removed again.
     client_a.post(reverse("training:set_delete_last", args=[squats.pk]))
-    assert [s.reps for s in squats.sets.all()] == [8, 6]
+    assert [s.reps for s in squats.sets.all()] == [10, 5, 8, 6]
 
     # Tick Planks, add an exercise from another plan, swap the order.
     planks = session.exercises.get(exercise__name="Planks")
@@ -164,7 +169,7 @@ def test_full_logging_flow(client_a, athlete_a, plan):
     assert "Felt good" in detail and "Done ✓" in detail and "62.5 kg" in detail
     assert "Romanian deadlift" not in detail
     assert [logged.exercise.name for logged in session.exercises.all()] == ["Squats", "Planks", "Leg curl"]
-    assert "3 exercises · 3 sets" in client_a.get(reverse("training:history")).content.decode()
+    assert "3 exercises · 5 sets" in client_a.get(reverse("training:history")).content.decode()
 
 
 @pytest.mark.django_db
@@ -288,7 +293,8 @@ def test_staff_accounts_cannot_log_sessions(client, athlete_b, squats):
 
 
 @pytest.mark.django_db
-def test_exercise_picker_hides_exercises_already_in_the_session(client_a, athlete_a, plan, squats):
+def test_exercise_picker_hides_exercises_already_in_the_session(client_a, athlete_a, plan):
+    squats = Exercise.objects.get(name="Squats")
     session = start_session(athlete_a, plan)
     url = reverse("training:exercise_add", args=[session.pk])
     page = client_a.get(url).content.decode()
@@ -346,6 +352,7 @@ def test_opening_an_action_address_goes_back_to_the_log(client_a, athlete_a, pla
     session = start_session(athlete_a, plan)
     squats = session.exercises.get(exercise__name="Squats")
     add_set(squats, Decimal("60"), 8)
+    logged_sets = squats.sets.count()
     planks = session.exercises.get(exercise__name="Planks")
     log_url = reverse("training:session_log", args=[session.pk])
 
@@ -360,7 +367,7 @@ def test_opening_an_action_address_goes_back_to_the_log(client_a, athlete_a, pla
 
     session.refresh_from_db()
     planks.refresh_from_db()
-    assert session.finished_at is None and squats.sets.count() == 1
+    assert session.finished_at is None and squats.sets.count() == logged_sets
     assert not planks.is_done and exercise_order(session)[-1] == "Planks"
 
 
@@ -383,3 +390,28 @@ def test_legal_pages_open_without_login_and_are_linked_from_the_login_page(clien
         response = client.get(reverse(name))
         assert response.status_code == 200 and text in response.content.decode()
         assert '<html lang="de"' in response.content.decode()
+
+
+@pytest.mark.django_db
+def test_method_2_page_shows_todays_target(client_a, athlete_a):
+    leg_curl = Exercise.objects.get(name="Leg curl")
+    earlier = start_session(athlete_a, date=timezone.localdate() - timedelta(days=7))
+    logged = add_exercise(earlier, leg_curl)
+    for _ in range(3):
+        add_set(logged, Decimal("30"), 10)
+    finish_session(earlier)
+
+    today = add_exercise(start_session(athlete_a), leg_curl)
+    page = client_a.get(reverse("training:exercise_sets", args=[today.pk])).content.decode()
+    assert "Last time: 30 kg · 10 / 10 / 10 (target 10 reached)" in page
+    assert "Today: 3 sets × 13 reps at 30 kg" in page
+    assert 'value="30"' in page and 'value="13"' in page
+
+
+@pytest.mark.django_db
+def test_exercise_without_methode_repeats_the_last_set(client_a, athlete_a, squats):
+    logged = add_exercise(start_session(athlete_a), squats)
+    add_set(logged, Decimal("40"), 12)
+    page = client_a.get(reverse("training:exercise_sets", args=[logged.pk])).content.decode()
+    assert 'value="40"' in page and 'value="12"' in page
+    assert 'class="message"' not in page and "Next: Set" not in page

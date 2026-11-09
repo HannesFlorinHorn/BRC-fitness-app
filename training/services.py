@@ -9,6 +9,7 @@ from datetime import timedelta
 from django.db import transaction
 from django.utils import timezone
 
+from . import methode
 from .models import Exercise, ExerciseSet, Session, SessionExercise
 
 # Athletes forget to tap Finish; an open session ends by itself after this long.
@@ -60,15 +61,19 @@ def move_exercise(session_exercise, offset):
 
 @transaction.atomic
 def add_set(session_exercise, weight_kg, reps):
+    """Log the next set. For Methode 1 the athlete's first entry is the working
+    set (Set 3); the two warm-ups are logged before it, worked out from its weight."""
     if session_exercise.exercise.tracking != Exercise.Tracking.SETS:
         raise ValueError("Tick-when-done exercises have no sets")
     last = session_exercise.sets.order_by("-number").first()
-    return ExerciseSet.objects.create(
-        session_exercise=session_exercise,
-        number=last.number + 1 if last else 1,
-        weight_kg=weight_kg,
-        reps=reps,
-    )
+    number = last.number + 1 if last else 1
+    if last is None and session_exercise.method == Exercise.Method.METHOD_1:
+        for number, (warm_up_weight, warm_up_reps) in enumerate(methode.warm_ups(weight_kg), start=1):
+            ExerciseSet.objects.create(
+                session_exercise=session_exercise, number=number, weight_kg=warm_up_weight, reps=warm_up_reps
+            )
+        number += 1
+    return ExerciseSet.objects.create(session_exercise=session_exercise, number=number, weight_kg=weight_kg, reps=reps)
 
 
 def delete_last_set(session_exercise):

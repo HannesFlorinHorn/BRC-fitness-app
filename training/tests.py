@@ -6,6 +6,7 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from accounts.models import User
+from training import methode
 from training.models import Category, Exercise, ExerciseSet, Plan, PlanExercise, Session, SessionExercise
 from training.services import (
     add_exercise,
@@ -47,6 +48,11 @@ def lunge(legs):
 @pytest.fixture
 def curl(arms):
     return Exercise.objects.create(name="Biceps curl", category=arms, method=1)
+
+
+@pytest.fixture
+def pushups(arms):
+    return Exercise.objects.create(name="Push-ups", category=arms)
 
 
 @pytest.fixture
@@ -214,9 +220,9 @@ def test_session_can_be_logged_for_a_past_date(athlete):
 
 
 @pytest.mark.django_db
-def test_open_session_finishes_itself_after_26_hours_with_a_3_hour_length(athlete, squat):
+def test_open_session_finishes_itself_after_26_hours_with_a_3_hour_length(athlete, pushups):
     session = start_session(athlete)
-    add_set(add_exercise(session, squat), Decimal("60"), 8)
+    add_set(add_exercise(session, pushups), Decimal("0"), 20)
     started = timezone.now() - timedelta(hours=25, minutes=59)
     Session.objects.filter(pk=session.pk).update(created_at=started)
     assert get_open_session(athlete) == session
@@ -238,8 +244,8 @@ def test_finishing_a_session_with_nothing_logged_discards_it(athlete, leg_plan):
 
 
 @pytest.mark.django_db
-def test_sets_are_numbered_and_last_one_can_be_deleted(athlete, squat):
-    logged = add_exercise(start_session(athlete), squat)
+def test_sets_are_numbered_and_last_one_can_be_deleted(athlete, pushups):
+    logged = add_exercise(start_session(athlete), pushups)
     add_set(logged, Decimal("60"), 8)
     add_set(logged, Decimal("62.5"), 6)
     assert [(s.number, s.weight_display) for s in logged.sets.all()] == [(1, "60"), (2, "62.5")]
@@ -283,3 +289,121 @@ def test_move_exercise_stops_at_the_ends(athlete, leg_plan):
     assert exercise_names(session) == ["Back squat", "Lunge"]
     move_exercise(first, 1)
     assert exercise_names(session) == ["Lunge", "Back squat"]
+
+
+# Methode suggestions (docs/METHODE_RULES.md)
+
+
+def sets(*pairs):
+    return [(Decimal(str(weight)), reps) for weight, reps in pairs]
+
+
+def warmed_up(set_3, set_4=None):
+    """A Methode 1 session: warm-ups from the Set 3 weight, then Sets 3 and 4."""
+    logged = methode.warm_ups(Decimal(str(set_3[0]))) + sets(set_3)
+    return logged + sets(set_4) if set_4 else logged
+
+
+@pytest.mark.parametrize(
+    "reps, table_a, table_b",
+    [(0, -2.5, -2.5), (2, -2.5, -2.5), (3, 0, 0), (4, 0, 0), (5, 0, 2.5), (6, 0, 2.5),
+     (7, 2.5, 2.5), (10, 2.5, 2.5), (11, 5, 5), (20, 5, 5)],
+)
+def test_tables_suggest_the_smaller_change_of_each_range(reps, table_a, table_b):
+    assert methode.look_up(methode.TABLE_A, reps).change == Decimal(str(table_a))
+    assert methode.look_up(methode.TABLE_B, reps).change == Decimal(str(table_b))
+
+
+def test_weights_round_down_to_plate_steps():
+    assert methode.warm_ups(Decimal("27.5")) == [(Decimal("12.5"), 10), (Decimal("20"), 5)]
+    assert methode.round_down(Decimal("1")) == 0
+    assert methode.round_down(Decimal("-2.5")) == 0
+
+
+@pytest.mark.parametrize(
+    "set_3, set_4, sheet, app",
+    [((20, 9), (25, 5), 30, 27.5), ((20, 6), (20, 4), 20, 20), ((20, 5), (20, 2), 17.5, 17.5)],
+)
+def test_method_1_next_working_weight_follows_the_sheet_examples(set_3, set_4, sheet, app):
+    weight, _ = methode.method_1_working_weight(warmed_up(set_3, set_4))
+    assert weight == Decimal(str(app))
+    # The sheet sometimes takes the upper end of the range; it must stay within it.
+    step = methode.look_up(methode.TABLE_B, set_4[1])
+    ends = sorted(Decimal(str(set_4[0])) + change for change in (step.change, step.up_to))
+    assert ends[0] <= Decimal(str(sheet)) <= ends[1]
+
+
+def test_method_1_without_set_4_keeps_the_set_3_weight():
+    assert methode.method_1_working_weight(warmed_up((60, 8)))[0] == 60
+
+
+def test_method_1_first_time_explains_the_sets():
+    guide = methode.method_1_guide([], [])
+    assert guide.lines == methode.METHOD_1_INTRO
+    assert guide.next.number == 3 and guide.weight is None and guide.reps is None
+
+
+def test_method_1_guide_through_a_session():
+    history = [warmed_up((60, 6), (62.5, 5))]
+
+    guide = methode.method_1_guide(history, [])
+    assert guide.lines == ["Last time: Set 3 · 60 kg × 6 · Set 4 · 62.5 kg × 5",
+                           "Today's working weight: 65 kg (+2.5 kg, up to +5 kg)"]
+    assert [(s.number, s.weight, s.reps) for s in guide.planned[:3]] == [
+        (1, Decimal("32.5"), 10), (2, Decimal("47.5"), 5), (3, Decimal("65"), None)]
+    assert (guide.next.number, guide.weight, guide.reps) == (3, Decimal("65"), None)
+
+    today = warmed_up((65, 8))
+    guide = methode.method_1_guide(history, today)
+    assert guide.lines[-1] == "Set 3: 8 reps → Set 4: 67.5 kg (+2.5 kg, up to +5 kg)"
+    assert (guide.next.number, guide.weight) == (4, Decimal("67.5"))
+
+    guide = methode.method_1_guide(history, today + sets((67.5, 3)))
+    assert guide.lines[-2:] == ["Set 4: 3 reps → Set 5 (optional): 67.5 kg (same, up to −2.5 kg)",
+                                "Next session: Set 3 at 67.5 kg (same)"]
+
+    # After the optional Set 5 the form just repeats the last set.
+    guide = methode.method_1_guide(history, today + sets((67.5, 3), (67.5, 3)))
+    assert guide.next is None and (guide.weight, guide.reps) == (Decimal("67.5"), 3)
+
+
+def test_method_2_follows_the_sheet_example():
+    # Sessions 1-7 of the sheet's example; the app raises by +2.5 kg (lower end) instead of +5.
+    history = [sets((25, 10), (25, 10), (25, 10)), sets((25, 13), (25, 13), (25, 13)),
+               sets((25, 15), (25, 15), (25, 15)), sets((27.5, 10), (27.5, 10), (27.5, 10)),
+               sets((27.5, 13), (27.5, 13), (27.5, 13)), sets((27.5, 15), (27.5, 13), (27.5, 10)),
+               sets((27.5, 15), (27.5, 15), (27.5, 15))]
+    targets = [(methode.method_2_state(history[:n]).target, methode.method_2_state(history[:n]).weight)
+               for n in range(1, len(history) + 1)]
+    assert targets == [(13, 25), (15, 25), (10, Decimal("27.5")), (13, Decimal("27.5")),
+                       (15, Decimal("27.5")), (15, Decimal("27.5")), (10, 30)]
+
+
+def test_method_2_guide():
+    assert methode.method_2_guide([], []).lines == ["No sessions yet: 3 sets × 10 reps at a moderate weight."]
+    assert methode.method_2_guide([], []).reps == 10
+
+    history = [sets((30, 10), (30, 10), (30, 10)), sets((30, 13), (30, 13), (30, 13)),
+               sets((30, 15), (30, 13), (30, 10))]
+    guide = methode.method_2_guide(history, [])
+    assert guide.lines == ["Last time: 30 kg · 15 / 13 / 10 (target 15 not reached)",
+                           "Today: 3 sets × 15 reps at 30 kg"]
+    assert [(s.number, s.weight, s.reps) for s in guide.planned] == [(1, 30, 15), (2, 30, 15), (3, 30, 15)]
+
+    guide = methode.method_2_guide(history, sets((30, 15), (30, 15), (30, 15)))
+    assert guide.lines[-1] == "Next session: 3 × 10 reps at 32.5 kg"
+    assert guide.next is None
+
+
+@pytest.mark.django_db
+def test_method_1_working_set_brings_its_warm_ups(athlete, squat, pushups):
+    logged = add_exercise(start_session(athlete), squat)
+    add_set(logged, Decimal("60"), 6)
+    add_set(logged, Decimal("62.5"), 5)
+    assert [(s.number, s.weight_display, s.reps) for s in logged.sets.all()] == [
+        (1, "30", 10), (2, "45", 5), (3, "60", 6), (4, "62.5", 5)]
+
+    # Other exercises start at Set 1 as before.
+    plain = add_exercise(logged.session, pushups)
+    add_set(plain, Decimal("0"), 20)
+    assert [s.number for s in plain.sets.all()] == [1]

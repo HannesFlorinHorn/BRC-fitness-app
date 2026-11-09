@@ -7,7 +7,7 @@ from django.db.models import Count
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 
-from . import services
+from . import methode, services
 from .forms import SetForm, StartSessionForm
 from .models import Exercise, Session, SessionExercise
 
@@ -161,12 +161,24 @@ def exercise_sets(request, logged):
         if form.is_valid():
             services.add_set(logged, form.cleaned_data["weight_kg"], form.cleaned_data["reps"])
             return redirect("training:exercise_sets", logged.pk)
-    else:
-        last = logged.sets.order_by("-number").first()
-        form = SetForm(initial={"weight_kg": last.weight_display, "reps": last.reps} if last else None)
+
+    guide = methode.guide_for(logged)
+    if request.method != "POST":
+        if guide is not None:
+            weight = methode.plain(guide.weight) if guide.weight is not None else None
+            form = SetForm(initial={"weight_kg": weight, "reps": guide.reps})
+        else:
+            last = logged.sets.order_by("-number").first()
+            form = SetForm(initial={"weight_kg": last.weight_display, "reps": last.reps} if last else None)
 
     next_exercise = logged.session.exercises.filter(order__gt=logged.order).select_related("exercise").first()
-    context = {"logged": logged, "sets": logged.sets.all(), "form": form, "next_exercise": next_exercise}
+    context = {
+        "logged": logged,
+        "sets": logged.sets.all(),
+        "form": form,
+        "guide": guide,
+        "next_exercise": next_exercise,
+    }
     return render(request, "training/exercise_sets.html", context)
 
 

@@ -1,0 +1,292 @@
+"""Suggestions for Methode 1 and 2, following docs/METHODE_RULES.md.
+
+The app suggests and never enforces: athletes log what they actually did.
+Nothing here is stored; every suggestion is worked out from the sets the
+athlete has logged. The functions below the database part only take lists
+of (weight, reps) pairs, so they can be tested against the coach's sheet.
+"""
+
+from dataclasses import dataclass, field
+from decimal import ROUND_FLOOR, Decimal
+from typing import NamedTuple
+
+from .models import Exercise, SessionExercise
+
+PLATE_STEP = Decimal("2.5")
+
+
+class Step(NamedTuple):
+    min_reps: int
+    max_reps: int | None  # None = "or more"
+    change: Decimal  # what the app suggests: the smaller change of the range
+    up_to: Decimal  # the other end of the range, shown as a hint
+
+
+# Methode 1, Set 3 reps -> change for Set 4 (and Set 4 reps -> Set 5).
+TABLE_A = (
+    Step(0, 2, Decimal("-2.5"), Decimal("-5")),
+    Step(3, 4, Decimal("0"), Decimal("-2.5")),
+    Step(5, 6, Decimal("0"), Decimal("0")),
+    Step(7, 10, Decimal("2.5"), Decimal("5")),
+    Step(11, None, Decimal("5"), Decimal("10")),
+)
+
+# Methode 1, Set 4 reps -> change for the next session's working weight (Set 3).
+TABLE_B = (
+    Step(0, 2, Decimal("-2.5"), Decimal("-5")),
+    Step(3, 4, Decimal("0"), Decimal("0")),
+    Step(5, 6, Decimal("2.5"), Decimal("5")),
+    Step(7, 10, Decimal("2.5"), Decimal("7.5")),
+    Step(11, None, Decimal("5"), Decimal("10")),
+)
+
+# Methode 1 warm-ups: (reps, share of the working weight).
+WARM_UPS = ((10, Decimal("0.5")), (5, Decimal("0.75")))
+
+# Methode 2: target reps for all 3 sets; after the last one the weight goes up.
+TARGETS = (10, 13, 15)
+METHOD_2_SETS = 3
+METHOD_2_WEIGHT_STEP = Step(0, None, Decimal("2.5"), Decimal("5"))
+
+
+@dataclass
+class PlannedSet:
+    """An upcoming set, shown greyed out below the logged ones."""
+
+    number: int
+    note: str
+    weight: Decimal | None = None
+    reps: int | None = None  # None = as many as possible
+
+    @property
+    def weight_display(self):
+        return plain(self.weight) if self.weight is not None else None
+
+
+@dataclass
+class Guide:
+    """What the sets page shows for the next set."""
+
+    lines: list[str] = field(default_factory=list)  # the message box
+    planned: list[PlannedSet] = field(default_factory=list)
+    next: PlannedSet | None = None  # the set the form is for
+    weight: Decimal | None = None  # prefilled in the form
+    reps: int | None = None
+
+    def prefill(self, today):
+        """Prefill with the next planned set, or else repeat the last logged set."""
+        if self.next is not None:
+            self.weight, self.reps = self.next.weight, self.next.reps
+        elif today:
+            self.weight, self.reps = today[-1]
+
+
+def guide_for(logged):
+    """The guide for a logged exercise, or None if it has no Methode."""
+    if logged.method is None or logged.exercise.tracking != Exercise.Tracking.SETS:
+        return None
+    today = [(s.weight_kg, s.reps) for s in logged.sets.all()]
+    history = [[(s.weight_kg, s.reps) for s in earlier.sets.all()] for earlier in earlier_sessions(logged)]
+    if logged.method == Exercise.Method.METHOD_1:
+        return method_1_guide(history, today)
+    return method_2_guide(history, today)
+
+
+def earlier_sessions(logged):
+    """The athlete's earlier logs of this exercise under the same Methode, oldest first."""
+    session = logged.session
+    return (
+        SessionExercise.objects.filter(
+            session__athlete_id=session.athlete_id, exercise_id=logged.exercise_id, method=logged.method
+        )
+        .exclude(session=session)
+        .filter(session__date__lte=session.date)
+        .order_by("session__date", "session__created_at")
+        .prefetch_related("sets")
+    )
+
+
+# Building blocks
+
+
+def round_down(weight):
+    """Down to the next plate step, never below 0."""
+    return max((weight / PLATE_STEP).to_integral_value(ROUND_FLOOR) * PLATE_STEP, Decimal("0"))
+
+
+def look_up(table, reps):
+    """The row of the table whose rep range contains reps."""
+    for step in table:
+        if reps >= step.min_reps and (step.max_reps is None or reps <= step.max_reps):
+            return step
+    raise ValueError(f"No row for {reps} reps")
+
+
+def apply(weight, step):
+    return round_down(weight + step.change)
+
+
+def plain(weight):
+    """62.5, 60: the weight without trailing zeros."""
+    return f"{weight:.2f}".rstrip("0").rstrip(".")
+
+
+def kg(weight):
+    return f"{plain(weight)} kg"
+
+
+def signed(change):
+    if change == 0:
+        return "same"
+    return ("+" if change > 0 else "−") + kg(abs(change))
+
+
+def change_text(step):
+    """"+2.5 kg, up to +5 kg" or just "same"."""
+    if step.up_to == step.change:
+        return signed(step.change)
+    return f"{signed(step.change)}, up to {signed(step.up_to)}"
+
+
+def warm_ups(working_weight):
+    """The two warm-up sets for a working weight, as (weight, reps)."""
+    return [(round_down(working_weight * share), reps) for reps, share in WARM_UPS]
+
+
+# Methode 1: 2 warm-ups, Set 3 max reps, Set 4 (and optional 5) adjusted by Table A.
+
+METHOD_1_INTRO = [
+    "No sessions yet:",
+    "Set 1 · warm-up · 10 reps",
+    "Set 2 · warm-up · 5 reps",
+    "Set 3 · working set · target 5–6 reps",
+    "Set 4/5 · adjusted automatically",
+]
+
+
+def method_1_working_weight(last):
+    """Today's working weight from the last session: Set 4 via Table B, else Set 3 unchanged."""
+    if len(last) >= 4:
+        step = look_up(TABLE_B, last[3][1])
+        return apply(last[3][0], step), change_text(step)
+    return round_down(last[2][0]), "same as last Set 3"
+
+
+def method_1_guide(history, today):
+    guide = Guide()
+    done = [sets for sets in history if len(sets) >= 3]
+    working = None
+    if done:
+        last = done[-1]
+        summary = f"Last time: Set 3 · {kg(last[2][0])} × {last[2][1]}"
+        if len(last) >= 4:
+            summary += f" · Set 4 · {kg(last[3][0])} × {last[3][1]}"
+        working, how = method_1_working_weight(last)
+        guide.lines += [summary, f"Today's working weight: {kg(working)} ({how})"]
+    elif len(today) < 3:
+        guide.lines += METHOD_1_INTRO
+
+    if len(today) >= 3:
+        working = today[2][0]
+        set_4 = look_up(TABLE_A, today[2][1])
+        guide.lines.append(f"Set 3: {today[2][1]} reps → Set 4: {kg(apply(working, set_4))} ({change_text(set_4)})")
+    if len(today) >= 4:
+        weight, reps = today[3]
+        set_5 = look_up(TABLE_A, reps)
+        next_session = look_up(TABLE_B, reps)
+        guide.lines.append(f"Set 4: {reps} reps → Set 5 (optional): {kg(apply(weight, set_5))} ({change_text(set_5)})")
+        guide.lines.append(f"Next session: Set 3 at {kg(apply(weight, next_session))} ({change_text(next_session)})")
+
+    guide.planned, guide.next = method_1_planned(today, working, show_warm_ups=bool(done))
+    guide.prefill(today)
+    return guide
+
+
+def method_1_planned(today, working, show_warm_ups):
+    """The sets still to come, and the one the form is for. With nothing
+    logged, the athlete's first entry is Set 3: the warm-ups are logged
+    automatically from its weight (services.add_set)."""
+    count = len(today)
+    set_3 = PlannedSet(3, "working set · max reps", working)
+    set_4 = PlannedSet(4, "adjusted after Set 3 · max reps")
+    if count == 0:
+        planned = []
+        if show_warm_ups:
+            planned = [
+                PlannedSet(number, "warm-up · logged with Set 3", weight, reps)
+                for number, (weight, reps) in enumerate(warm_ups(working), start=1)
+            ]
+        return planned + [set_3, set_4], set_3
+    if count == 1:  # only reached after deleting sets again
+        weight = warm_ups(working)[1][0] if working is not None else None
+        set_2 = PlannedSet(2, "warm-up", weight, WARM_UPS[1][0])
+        return [set_2, set_3, set_4], set_2
+    if count == 2:
+        return [set_3, set_4], set_3
+    if count == 3:
+        set_4.note, set_4.weight = "max reps", apply(today[2][0], look_up(TABLE_A, today[2][1]))
+        return [set_4], set_4
+    if count == 4:
+        set_5 = PlannedSet(5, "optional · max reps", apply(today[3][0], look_up(TABLE_A, today[3][1])))
+        return [set_5], set_5
+    return [], None
+
+
+# Methode 2: 3 sets with one target (10, 13, 15); after 15 the weight goes up.
+
+
+@dataclass
+class Method2State:
+    target: int = TARGETS[0]
+    weight: Decimal | None = None
+    raised: bool = False  # weight went up for this session
+
+
+def method_2_next(state, sets):
+    """The state after one more logged session."""
+    weight = sets[0][0]
+    reached = len(sets) >= METHOD_2_SETS and all(reps >= state.target for _, reps in sets[:METHOD_2_SETS])
+    if not reached:
+        return Method2State(state.target, round_down(weight))
+    if state.target == TARGETS[-1]:
+        return Method2State(TARGETS[0], apply(weight, METHOD_2_WEIGHT_STEP), raised=True)
+    return Method2State(TARGETS[TARGETS.index(state.target) + 1], round_down(weight))
+
+
+def method_2_state(history):
+    state = Method2State()
+    for sets in history:
+        if sets:
+            state = method_2_next(state, sets)
+    return state
+
+
+def method_2_guide(history, today):
+    guide = Guide()
+    logged = [sets for sets in history if sets]
+    state = method_2_state(logged)
+    if not logged:
+        guide.lines.append(f"No sessions yet: {METHOD_2_SETS} sets × {TARGETS[0]} reps at a moderate weight.")
+    else:
+        previous = method_2_state(logged[:-1])
+        last = logged[-1]
+        reps = " / ".join(str(r) for _, r in last)
+        reached = "reached" if method_2_next(previous, last).target != previous.target else "not reached"
+        guide.lines.append(f"Last time: {kg(last[0][0])} · {reps} (target {previous.target} {reached})")
+        today_text = f"Today: {METHOD_2_SETS} sets × {state.target} reps at {kg(state.weight)}"
+        if state.raised:
+            today_text += f" ({change_text(METHOD_2_WEIGHT_STEP)})"
+        guide.lines.append(today_text)
+
+    if len(today) >= METHOD_2_SETS:
+        upcoming = method_2_next(state, today)
+        guide.lines.append(f"Next session: {METHOD_2_SETS} × {upcoming.target} reps at {kg(upcoming.weight)}")
+
+    weight = today[-1][0] if today else state.weight
+    guide.planned = [
+        PlannedSet(number, f"target {state.target} reps", weight, state.target)
+        for number in range(len(today) + 1, METHOD_2_SETS + 1)
+    ]
+    guide.next = guide.planned[0] if guide.planned else None
+    guide.prefill(today)
+    return guide
