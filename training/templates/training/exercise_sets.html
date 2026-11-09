@@ -10,7 +10,7 @@
     <p class="message" role="status">{% for line in guide.lines %}{{ line }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</p>
   {% endif %}
 
-  {% include "training/_sets_table.html" with sets=sets planned=guide.planned %}
+  {% include "training/_sets_table.html" with sets=sets planned=guide.planned next=guide.next %}
   {% if guide.next.number == 3 and not sets %}
     <p class="muted">Enter your working set (Set 3). The warm-ups (Sets 1 and 2) are logged with it.</p>
   {% endif %}

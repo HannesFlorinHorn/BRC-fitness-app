@@ -13,6 +13,7 @@
   --surface-container: #e9edff;
   --on-surface: #111b30;
   --muted: #4c5e87;
+  --faint: #a3afcc; /* planned sets, lighter than muted text */
   --outline: #d8e2fe;
   --primary: #ba0022;
   --primary-pressed: #930019;
@@ -274,4 +275,6 @@ table.sets th:not(:first-child), table.sets td:not(:first-child) { text-align: r
 .legal-links a { color: var(--muted); }
 
 /* Sets the Methode suggests but nobody has logged yet */
-table.sets tr.planned td { color: var(--muted); font-weight: 400; }
+table.sets tr.planned td { color: var(--faint); font-weight: 400; }
+/* The set the form is for: the suggestion the athlete needs right now. */
+table.sets tr.planned.next td { color: var(--muted); font-weight: 600; }
