@@ -419,3 +419,17 @@ def test_exercise_without_methode_repeats_the_last_set(client_a, athlete_a, squa
     page = client_a.get(reverse("training:exercise_sets", args=[logged.pk])).content.decode()
     assert 'value="40"' in page and 'value="12"' in page
     assert 'class="message"' not in page and "next-set" not in page and "Save set" in page
+
+
+@pytest.mark.django_db
+def test_session_log_greys_out_done_exercises(client_a, athlete_a, squats):
+    session = start_session(athlete_a)
+    leg_curl = add_exercise(session, Exercise.objects.get(name="Leg curl"))  # Methode 2
+    for _ in range(3):
+        add_set(leg_curl, Decimal("30"), 10)
+    open_one = add_exercise(session, squats)
+    add_set(open_one, Decimal("40"), 8)
+
+    page = client_a.get(reverse("training:session_log", args=[session.pk])).content.decode()
+    assert page.count('class="grow exercise-link done"') == 1
+    assert page.count('class="grow exercise-link"') == 1

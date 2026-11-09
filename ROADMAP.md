@@ -128,5 +128,6 @@ Done when: every colleague has logged in on their phone and a nightly backup exi
 - 2026-11-09: **Methode rules written down** in `docs/METHODE_RULES.md`. The app suggests (never enforces): lower end of each range, 2.5 kg steps rounded down. The logic moves into Milestone 1.2; deload weeks stay in Milestone 2.
 - 2026-11-09: **Methode 2 depends only on the last session.** Its plan of the day (target reps and weight) is stored with the first set. All sets at 15+ reps raise the weight at once; a set below 10 reps lowers the target one step (at 10: −2.5 kg); a lighter set means the plan is repeated.
 - 2026-11-09: **Methode 2 rules refined** (see `docs/METHODE_RULES.md`): the first session sets the starting weight (highest weight with 10+ reps, target 10); targets can be skipped; all sets below 10 reps lower the weight and set target 15; different weights within a session keep the plan. Uncovered cases keep the plan, and a failing calculation falls back to repeating the last set.
+- 2026-11-09: **Methode exercises tick themselves done** after Set 4 (Methode 1) or Set 3 (Methode 2) and are greyed out in the session log. Sessions logged before this stay unticked.
 - Open: deload rules of Methode 1 and 2 (Milestone 2).
 - 2026-11-05: The athlete page for building own plans moves to **Milestone 2**. Until then, plans are created in the admin.

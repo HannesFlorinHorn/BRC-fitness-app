@@ -151,7 +151,8 @@ class SessionExercise(models.Model):
     # Copied from the catalog when the exercise is logged, so changing an
     # exercise's Methode later does not rewrite past sessions.
     method = models.PositiveSmallIntegerField(choices=Exercise.Method.choices, null=True, editable=False)
-    # Only used by "tick when done" exercises; set-based ones count as done once they have sets.
+    # Ticked by the athlete for "tick when done" exercises; ticked automatically
+    # for Methode exercises once their sets are complete (services.update_done).
     is_done = models.BooleanField(default=False)
     # Methode 2 plan of the day, stored with the first set (training/methode.py).
     # The next session is worked out from this plan and the logged sets alone.

@@ -513,3 +513,47 @@ def test_method_1_working_set_brings_its_warm_ups_once_logged_before(athlete, sq
     plain = add_exercise(logged.session, pushups)
     add_set(plain, Decimal("0"), 20)
     assert [s.number for s in plain.sets.all()] == [1]
+
+
+def done_after_each_set(session_exercise, *pairs):
+    """Log the sets one by one and record whether the exercise is done after each."""
+    done = []
+    for weight, reps in pairs:
+        add_set(session_exercise, Decimal(str(weight)), reps)
+        session_exercise.refresh_from_db()
+        done.append(session_exercise.is_done)
+    return done
+
+
+@pytest.mark.django_db
+def test_method_1_is_done_after_set_4(athlete, squat):
+    # First time: the athlete logs all 4 sets.
+    first = add_exercise(start_session(athlete, date=timezone.localdate() - timedelta(days=7)), squat)
+    assert done_after_each_set(first, (25, 10), (37.5, 5), (50, 6), (52.5, 4), (52.5, 3)) == [
+        False, False, False, True, True]  # Set 5 is optional and keeps it done
+    finish_session(first.session)
+
+    # Later: the working set brings the warm-ups, so Set 4 is the second entry.
+    logged = add_exercise(start_session(athlete), squat)
+    assert done_after_each_set(logged, (52.5, 6), (52.5, 5)) == [False, True]
+
+
+@pytest.mark.django_db
+def test_method_2_is_done_after_set_3(athlete, lunge):
+    logged = add_exercise(start_session(athlete), lunge)
+    assert done_after_each_set(logged, (30, 10), (30, 10), (30, 10)) == [False, False, True]
+
+
+@pytest.mark.django_db
+def test_deleting_a_set_unticks_the_exercise_again(athlete, lunge):
+    logged = add_exercise(start_session(athlete), lunge)
+    done_after_each_set(logged, (30, 10), (30, 10), (30, 10))
+    delete_last_set(logged)
+    logged.refresh_from_db()
+    assert not logged.is_done
+
+
+@pytest.mark.django_db
+def test_exercises_without_methode_are_never_marked_done(athlete, pushups):
+    logged = add_exercise(start_session(athlete), pushups)
+    assert done_after_each_set(logged, *[(0, 20)] * 5) == [False] * 5

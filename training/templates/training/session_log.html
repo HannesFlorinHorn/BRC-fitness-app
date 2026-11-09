@@ -17,7 +17,7 @@
             </button>
           </form>
         {% else %}
-          <a class="grow exercise-link" href="{% url 'training:exercise_sets' logged.pk %}">
+          <a class="grow exercise-link{% if logged.is_done %} done{% endif %}" href="{% url 'training:exercise_sets' logged.pk %}">
             <strong>{{ logged.exercise.name }}</strong><br>
             <span class="muted">
               {% if logged.method %}{{ logged.get_method_display }} · {% endif %}

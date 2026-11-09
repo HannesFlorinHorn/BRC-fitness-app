@@ -51,6 +51,9 @@ TARGETS = (10, 13, 15)
 METHOD_2_SETS = 3
 METHOD_2_WEIGHT_STEP = Step(0, None, Decimal("2.5"), Decimal("5"))
 
+# An exercise counts as done after this many sets (Methode 1: Set 5 is optional).
+SETS_TO_BE_DONE = {Exercise.Method.METHOD_1: 4, Exercise.Method.METHOD_2: METHOD_2_SETS}
+
 
 @dataclass
 class PlannedSet:
@@ -109,6 +112,13 @@ def stored_plan(logged):
         return None
     last = method_2_last_session(logged)
     return Method2Plan(logged.target_reps, logged.target_weight, method_2_today(last).change if last else None)
+
+
+def is_done(logged, set_count):
+    """Whether a Methode exercise with this many sets is done. Exercises
+    without a Methode have no rule and are never marked done."""
+    needed = SETS_TO_BE_DONE.get(logged.method)
+    return needed is not None and set_count >= needed
 
 
 def logs_warm_ups_itself(logged):

@@ -199,6 +199,8 @@ a.card-active span { display: block; }
 .row { display: flex; align-items: center; gap: 0.5rem; }
 .grow { flex: 1; min-width: 0; margin: 0; }
 .exercise-link { color: var(--on-surface); text-decoration: none; }
+/* Methode exercise with all its sets logged: greyed out so the open ones stand out. */
+.exercise-link.done strong { color: var(--muted); font-weight: 400; }
 .move { display: flex; flex: none; gap: 0.25rem; }
 .move form { margin: 0; }
 

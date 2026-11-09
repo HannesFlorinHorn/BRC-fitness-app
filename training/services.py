@@ -80,13 +80,26 @@ def add_set(session_exercise, weight_kg, reps):
         plan = methode.method_2_plan_to_store(session_exercise)
         session_exercise.target_reps, session_exercise.target_weight = plan.target, plan.weight
         session_exercise.save(update_fields=["target_reps", "target_weight"])
-    return ExerciseSet.objects.create(session_exercise=session_exercise, number=number, weight_kg=weight_kg, reps=reps)
+    new_set = ExerciseSet.objects.create(session_exercise=session_exercise, number=number, weight_kg=weight_kg, reps=reps)
+    update_done(session_exercise)
+    return new_set
 
 
+@transaction.atomic
 def delete_last_set(session_exercise):
     last = session_exercise.sets.order_by("-number").first()
     if last is not None:
         last.delete()
+        update_done(session_exercise)
+
+
+def update_done(session_exercise):
+    """Tick a Methode exercise once its sets are complete (Methode 1: 4 sets,
+    Methode 2: 3 sets), and untick it when a set is deleted below that."""
+    done = methode.is_done(session_exercise, session_exercise.sets.count())
+    if done != session_exercise.is_done:
+        session_exercise.is_done = done
+        session_exercise.save(update_fields=["is_done"])
 
 
 def mark_done(session_exercise, done=True):
