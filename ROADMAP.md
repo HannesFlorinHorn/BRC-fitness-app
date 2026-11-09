@@ -34,6 +34,7 @@ Goal: find the problems on your own machine before any server exists.
 - [ ] Back up with `sqlite3 ... ".backup"`, delete the database, restore from the backup and check that the data is back
 - [x] Legal pages and texts: legal notice (`/legal/`) and privacy notice (`/privacy/`) in German, readable without login, linked only from the login page (link labels in English). Drafted without legal advice; have them checked before go-live.
 - [x] Consider dropping Pico.css (keeping only `custom.css`) if overriding its styles keeps causing trouble during phone testing. No trouble found; Pico stays.
+- [ ] Methode 1 and 2: suggest weights and target reps on the sets page, following `docs/METHODE_RULES.md` (pulled forward from Milestone 2; deload weeks stay in Milestone 2)
 - [ ] Short bug list written down and cleared
 
 Bug list:
@@ -73,7 +74,7 @@ Done when: every colleague has logged in on their phone and a nightly backup exi
 - [ ] Coach overview page (athletes, last session, consistency) instead of the admin
 - [ ] Edit and delete sessions, exercise catalog page, CSV export
 - [ ] Session notes field back in the athlete pages, without losing typed text (e.g. notes asked on a finish page, or autosaved). The backend still stores notes; only the field was removed in 1.2.
-- [ ] Training plan logic for Methode 1 and 2: target reps per set and suggested weight progression (rules to be written down by the owner first)
+- [ ] Deload weeks for Methode 1 (every 4th week) and Methode 2 (after 2-3 cycles); decide the weight rule and how deload weeks are chosen
 - [ ] "My plans" page: athletes create their own plans, add and reorder exercises (model exists since 1.1; until then plans are created in the admin)
 - [ ] Simple landing page (details to be agreed with the owner)
 - [ ] Register mechanism (details to be agreed with the owner; `CLAUDE.md` currently says no signup page)
@@ -124,5 +125,6 @@ Done when: every colleague has logged in on their phone and a nightly backup exi
 - 2026-11-09: **Login lifetime depends on the account, not the page** (admin and app share one cookie): staff accounts 30 minutes, athletes 7 days, both counted from the last request.
 - 2026-11-09: Buttons that change data stay POST-only. Opening their address directly redirects to the session log; `/logout/` opened directly does not log out (so other websites cannot log anyone out).
 - 2026-11-09: The app is a **private project of the owner**, not run by the club. Legal notice and privacy notice name the owner (c/o the club's address); legal basis is the athletes' consent; supervisory authority LDA Brandenburg. The links appear only on the login page. The two legal pages are in **German**; the rest of the UI stays English.
-- Open: exact rules of Methode 1 and 2.
+- 2026-11-09: **Methode rules written down** in `docs/METHODE_RULES.md`. The app suggests (never enforces): lower end of each range, 2.5 kg steps rounded down. The logic moves into Milestone 1.2; deload weeks stay in Milestone 2.
+- Open: deload rules of Methode 1 and 2 (Milestone 2).
 - 2026-11-05: The athlete page for building own plans moves to **Milestone 2**. Until then, plans are created in the admin.

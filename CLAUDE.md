@@ -5,6 +5,7 @@ Small Django web app for a training group (about 10 people). Athletes log traini
 ## Read first
 
 - `ROADMAP.md`: current milestone, task checklist and decisions log. Work only on the current milestone. Tick items off when they are done and add new decisions to the log.
+- `docs/METHODE_RULES.md`: the rules of Methode 1 and 2 and how the app applies them. Read it before touching `training/methode.py` or the sets page.
 - `docs/design/DESIGN.md`: design tokens and rules exported from Google Stitch (colors, fonts, spacing). Read it before touching any template or CSS. Screen mockups (HTML from Stitch, German placeholder text) are in `docs/design/screen_exploration/`. They show more than Milestone 1.1 needs; build only what the current milestone lists.
 
 ## Stack (Milestone 1)
@@ -76,7 +77,7 @@ SQLite backup (safe while the app runs): `sqlite3 db.sqlite3 ".backup 'backup.sq
 
 ## Methode
 
-Most exercises are Methode 1 or Methode 2; some (e.g. Planks, Abs) have none. The Methode defines the training plan logic: how many reps per set the athlete must reach and how the weight changes across sets and sessions. In Milestone 1 the app only stores the Methode on the exercise. Targets and progression come later, once the owner has written down the rules.
+Most exercises are Methode 1 or Methode 2; some (e.g. Planks, Abs) have none. The Methode defines the training plan logic: how many reps per set the athlete must reach and how the weight changes across sets and sessions. The rules are written down in `docs/METHODE_RULES.md`; the app suggests targets and weights from them (Milestone 1.2). Deload weeks come in Milestone 2.
 
 ## UI language
 
@@ -84,4 +85,4 @@ English for all UI text, code, comments and commits. Exception: the legal notice
 
 ## Open questions (ask the owner, do not guess)
 
-1. The exact rules of Methode 1 and Methode 2 (target reps per set, weight progression). Not needed before the training plan milestone.
+1. Deload weeks for Methode 1 and 2: which weight applies (Set 2 weight or −30 %) and how deload weeks are chosen (marked by the coach or counted automatically). Milestone 2.
