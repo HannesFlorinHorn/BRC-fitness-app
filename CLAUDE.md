@@ -11,7 +11,7 @@ Small Django web app for a training group (about 10 people). Athletes log traini
 ## Stack (Milestone 1)
 
 - Python + Django, server-rendered pages (Django templates and forms). No separate API and no JavaScript framework.
-- Database: **SQLite** (one file, `db.sqlite3`, never committed to Git).
+- Database: **SQLite** (one file, `db.sqlite3`, never committed to Git; `DATABASE_PATH` moves it, e.g. onto the Docker volume). WAL mode, so `db.sqlite3-wal` and `db.sqlite3-shm` belong to it.
 - Login: Django's built-in auth with a custom user model (`accounts.User`, email as the login field, no username). Accounts are created by the owner in the Django admin. No signup page and no email sending.
 - Styling: Pico.css (a single CSS file) plus a small `static/css/custom.css` that applies the design tokens. No JS build step.
 - Settings via environment variables (`.env`, gitignored; keep `.env.example` up to date).
@@ -57,7 +57,9 @@ pytest
 python manage.py makemigrations --check   # must pass before committing
 ```
 
-SQLite backup (safe while the app runs): `sqlite3 db.sqlite3 ".backup 'backup.sqlite3'"`. Do not copy the file with `cp` while the app is running.
+SQLite backup (safe while the app runs): `sqlite3 db.sqlite3 ".backup 'backup.sqlite3'"`. Do not copy the file with `cp` while the app is running: in WAL mode the latest saves can still be in `db.sqlite3-wal`.
+
+Logs: warnings and errors (server errors, Methode fallbacks, security warnings) go to the console: the `runserver` terminal locally, `docker compose logs` later. 404s are not logged.
 
 ## Rules for working in this repo
 

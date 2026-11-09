@@ -57,7 +57,7 @@ Goal: colleagues can reach it over HTTPS and start logging.
 - [x] Production settings from the environment: `DEBUG` off, strong `SECRET_KEY`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, secure cookies, proxy header setting
 - [ ] Raise HSTS (`SECURE_HSTS_SECONDS`) from 1 hour to 1 year once HTTPS has run stably for a few weeks
 - [ ] Gunicorn (few workers; SQLite allows one writer at a time) and WhiteNoise for static files
-- [ ] Docker Compose with Caddy and the app, database file and backups on a volume
+- [ ] Docker Compose with Caddy and the app, database file and backups on a volume, log rotation so logs cannot fill the disk
 - [ ] Small EU VPS, domain, DNS, firewall, SSH keys only, automatic security updates
 - [ ] Nightly SQLite backup copied off the server; restore tested once
 - [ ] Nightly `python manage.py clearsessions` to delete expired logins from the database
@@ -132,5 +132,6 @@ Done when: every colleague has logged in on their phone and a nightly backup exi
 - 2026-11-09: **Methode exercises tick themselves done** after Set 4 (Methode 1) or Set 3 (Methode 2) and are greyed out in the session log. Sessions logged before this stay unticked.
 - 2026-11-09: **Milestone 1.2 done**: tested locally and on the phone, clean clone and backup/restore checked. Current milestone is now 1.3 (go live).
 - 2026-11-09: **Production settings**: HTTPS redirect and proxy header (Caddy in front, Gunicorn never exposed), HSTS starting at 1 hour without subdomains or preload, and the app refuses to start with a weak secret key when DEBUG is off.
+- 2026-11-09: **SQLite and logging for production**: `DATABASE_PATH` from the environment, WAL mode with a 5 s busy timeout and immediate transactions for several Gunicorn workers (write safety stays strict), `STATIC_ROOT` for collectstatic, warnings and errors logged to the console without 404s.
 - Open: deload rules of Methode 1 and 2 (Milestone 2).
 - 2026-11-05: The athlete page for building own plans moves to **Milestone 2**. Until then, plans are created in the admin.

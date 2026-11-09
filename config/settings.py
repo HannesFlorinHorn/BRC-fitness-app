@@ -92,7 +92,18 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        # In Docker the database lives on a volume, outside the replaceable image.
+        "NAME": Path(os.environ.get("DATABASE_PATH") or BASE_DIR / "db.sqlite3"),
+        # Several Gunicorn workers share one file. WAL lets reads and writes run
+        # side by side, a second writer waits up to 5 seconds instead of failing
+        # with "database is locked", and IMMEDIATE takes the write lock at the
+        # start of a transaction (waiting does not help a lock taken halfway).
+        # Write safety (PRAGMA synchronous) stays at SQLite's strict default.
+        "OPTIONS": {
+            "init_command": "PRAGMA journal_mode=WAL",
+            "timeout": 5,
+            "transaction_mode": "IMMEDIATE",
+        },
     }
 }
 
@@ -139,5 +150,26 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+# collectstatic copies every static file here, for WhiteNoise to serve in production.
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Warnings and errors go to the console (docker compose logs in production,
+# the runserver terminal locally). Django's default would email server errors
+# to admins, and this app sends no email.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {"plain": {"format": "{asctime} {levelname} {name}: {message}", "style": "{"}},
+    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "plain"}},
+    "root": {"handlers": ["console"], "level": "WARNING"},
+    "loggers": {
+        # Replaces Django's own handlers, so every message reaches the console once.
+        "django": {"handlers": [], "level": "WARNING"},
+        # "Not Found" (404) is a warning and mostly bots trying addresses; 500 errors are still logged.
+        "django.request": {"level": "ERROR"},
+        # runserver's line per request (local only; Gunicorn does not use it).
+        "django.server": {"level": "INFO", "propagate": True},
+    },
+}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

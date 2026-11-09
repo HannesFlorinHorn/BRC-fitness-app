@@ -89,7 +89,7 @@ Decided with the owner on 2026-11-09. The app **suggests**; athletes always log 
 
   Rows 5 to 7: one step above the highest target all 3 sets reached, never below the current target. From row 3 on, the weight used in all 3 sets is the reference, even if it differs from the planned one (the athlete chose it on purpose).
 
-  Fallbacks: any case the rules do not cover keeps the plan of the last session; an unknown target counts as 10. If a calculation fails with an error, the sets page shows no suggestion and repeats the last set, like an exercise without a Methode; the error is written to the server log.
+  Fallbacks: any case the rules do not cover keeps the plan of the last session; an unknown target counts as 10. If a calculation fails with an error, the sets page shows no suggestion and repeats the last set, like an exercise without a Methode; the error is written to the server log (the console: the `runserver` terminal, later `docker compose logs`).
 - Method 1 warm-ups: the **first time** an exercise is logged, the athlete logs Sets 1 and 2 themselves (the info box gives about 50 % and 75 % of the working weight as a guide). Once there is an earlier session with at least 3 sets, the warm-ups are logged automatically when the athlete saves the working set (Set 3), from its weight. An exercise that is skipped therefore has no sets and is dropped at Finish.
 - Method 1 without a Set 4 last time: the working weight stays at the last Set 3 weight.
 - **Done:** a Methode 1 exercise is done after Set 4 (Set 5 stays optional), a Methode 2 exercise after Set 3. The app ticks it and greys out its name in the session log; deleting a set below that unticks it. Exercises without a Methode are never marked done.
