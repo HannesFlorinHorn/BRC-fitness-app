@@ -276,5 +276,6 @@ table.sets th:not(:first-child), table.sets td:not(:first-child) { text-align: r
 
 /* Sets the Methode suggests but nobody has logged yet */
 table.sets tr.planned td { color: var(--faint); font-weight: 400; }
-/* The set the form is for: the suggestion the athlete needs right now. */
-table.sets tr.planned.next td { color: var(--muted); font-weight: 600; }
+
+/* "Next: Set 3 · …" above the form: the most important line for the current set. */
+.label.next-set { color: var(--on-surface); font-weight: 700; }

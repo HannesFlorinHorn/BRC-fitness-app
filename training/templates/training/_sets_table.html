@@ -6,7 +6,7 @@
         <tr><td>{{ set.number }}</td><td>{{ set.weight_display }} kg</td><td>{{ set.reps }}</td></tr>
       {% endfor %}
       {% for set in planned %}
-        <tr class="planned{% if set.number == next.number %} next{% endif %}">
+        <tr class="planned">
           <td>{{ set.number }}</td>
           <td>{% if set.weight_display %}{{ set.weight_display }} kg{% else %}–{% endif %}</td>
           <td>{{ set.reps|default:"max" }}</td>

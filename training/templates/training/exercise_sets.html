@@ -10,14 +10,14 @@
     <p class="message" role="status">{% for line in guide.lines %}{{ line }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</p>
   {% endif %}
 
-  {% include "training/_sets_table.html" with sets=sets planned=guide.planned next=guide.next %}
+  {% include "training/_sets_table.html" with sets=sets planned=guide.planned %}
   {% if guide.next.number == 3 and not sets %}
     <p class="muted">Enter your working set (Set 3). The warm-ups (Sets 1 and 2) are logged with it.</p>
   {% endif %}
 
   <form method="post">
     {% csrf_token %}
-    {% if guide.next %}<p class="label">Next: Set {{ guide.next.number }} · {{ guide.next.note }}</p>{% endif %}
+    {% if guide.next %}<p class="label next-set">Next: Set {{ guide.next.number }} · {{ guide.next.note }}</p>{% endif %}
     <div class="set-inputs">
       <div>
         <label for="{{ form.weight_kg.id_for_label }}">{{ form.weight_kg.label }}</label>
