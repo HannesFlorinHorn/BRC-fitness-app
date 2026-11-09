@@ -138,7 +138,7 @@ def test_full_logging_flow(client_a, athlete_a, plan):
     squats = session.exercises.get(exercise__name="Squats")
     sets_url = reverse("training:exercise_sets", args=[squats.pk])
     page = client_a.get(sets_url).content.decode()
-    assert "No sessions yet:" in page and "Next: Set 1" in page and 'value="10"' in page
+    assert "No sessions yet:" in page and "Set 1 · warm-up" in page and "Save Set 1" in page and 'value="10"' in page
     client_a.post(sets_url, {"weight_kg": "30", "reps": "10"})
     client_a.post(sets_url, {"weight_kg": "45", "reps": "5"})
     assert client_a.post(sets_url, {"weight_kg": "62,5", "reps": "8"}).status_code == 302
@@ -417,4 +417,4 @@ def test_exercise_without_methode_repeats_the_last_set(client_a, athlete_a, squa
     add_set(logged, Decimal("40"), 12)
     page = client_a.get(reverse("training:exercise_sets", args=[logged.pk])).content.decode()
     assert 'value="40"' in page and 'value="12"' in page
-    assert 'class="message"' not in page and "Next: Set" not in page
+    assert 'class="message"' not in page and "next-set" not in page and "Save set" in page
