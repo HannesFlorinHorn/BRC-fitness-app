@@ -133,5 +133,6 @@ Done when: every colleague has logged in on their phone and a nightly backup exi
 - 2026-11-09: **Milestone 1.2 done**: tested locally and on the phone, clean clone and backup/restore checked. Current milestone is now 1.3 (go live).
 - 2026-11-09: **Production settings**: HTTPS redirect and proxy header (Caddy in front, Gunicorn never exposed), HSTS starting at 1 hour without subdomains or preload, and the app refuses to start with a weak secret key when DEBUG is off.
 - 2026-11-09: **SQLite and logging for production**: `DATABASE_PATH` from the environment, WAL mode with a 5 s busy timeout and immediate transactions for several Gunicorn workers (write safety stays strict), `STATIC_ROOT` for collectstatic, warnings and errors logged to the console without 404s.
+- 2026-11-13: **WhiteNoise** (6.12.0) serves static files with fingerprinted, compressed names cached for a year. With DEBUG off, `collectstatic` must run before every start (tests use Django's plain storage instead).
 - Open: deload rules of Methode 1 and 2 (Milestone 2).
 - 2026-11-05: The athlete page for building own plans moves to **Milestone 2**. Until then, plans are created in the admin.

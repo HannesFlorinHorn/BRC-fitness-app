@@ -14,8 +14,9 @@ Small Django web app for a training group (about 10 people). Athletes log traini
 - Database: **SQLite** (one file, `db.sqlite3`, never committed to Git; `DATABASE_PATH` moves it, e.g. onto the Docker volume). WAL mode, so `db.sqlite3-wal` and `db.sqlite3-shm` belong to it.
 - Login: Django's built-in auth with a custom user model (`accounts.User`, email as the login field, no username). Accounts are created by the owner in the Django admin. No signup page and no email sending.
 - Styling: Pico.css (a single CSS file) plus a small `static/css/custom.css` that applies the design tokens. No JS build step.
+- Static files: WhiteNoise serves them with DEBUG off, from `staticfiles/` (fingerprinted names). Run `collectstatic` before every start with DEBUG off, or every page fails with "Missing staticfiles manifest entry".
 - Settings via environment variables (`.env`, gitignored; keep `.env.example` up to date).
-- Later (not now): Gunicorn, WhiteNoise, Caddy, Docker Compose, VPS, Raspberry Pi. See `ROADMAP.md`.
+- Later (not now): Gunicorn, Caddy, Docker Compose, VPS, Raspberry Pi. See `ROADMAP.md`.
 
 ## Out of scope until the roadmap says so
 
@@ -53,6 +54,7 @@ python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver            # http://127.0.0.1:8000
 python manage.py runserver 0.0.0.0:8000   # to test from a phone on the same Wi-Fi
+python manage.py collectstatic --noinput   # before running with DEBUG=false
 pytest
 python manage.py makemigrations --check   # must pass before committing
 ```

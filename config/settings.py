@@ -60,6 +60,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -152,6 +153,14 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 # collectstatic copies every static file here, for WhiteNoise to serve in production.
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# collectstatic stores fingerprinted, compressed copies (custom.3f9a1c2b.css),
+# so browsers may cache them forever and still get every CSS change at once.
+# With DEBUG off, every page needs them: run collectstatic before starting.
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}
 
 # Warnings and errors go to the console (docker compose logs in production,
 # the runserver terminal locally). Django's default would email server errors

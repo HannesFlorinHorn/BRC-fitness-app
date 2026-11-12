@@ -10,3 +10,10 @@ os.environ.setdefault("SECURE_SSL_REDIRECT", "false")
 from config.settings import *  # noqa: E402,F403
 
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+
+# Tests do not run collectstatic, so use plain file names instead of the
+# fingerprinted ones (config/tests.py checks the WhiteNoise storage itself).
+STORAGES = {
+    **STORAGES,  # noqa: F405
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+}
