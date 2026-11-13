@@ -56,7 +56,7 @@ Goal: colleagues can reach it over HTTPS and start logging.
 
 - [x] Production settings from the environment: `DEBUG` off, strong `SECRET_KEY`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, secure cookies, proxy header setting
 - [ ] Raise HSTS (`SECURE_HSTS_SECONDS`) from 1 hour to 1 year once HTTPS has run stably for a few weeks
-- [ ] Gunicorn (few workers; SQLite allows one writer at a time) and WhiteNoise for static files
+- [x] Gunicorn (few workers; SQLite allows one writer at a time) and WhiteNoise for static files
 - [ ] Docker Compose with Caddy and the app, database file and backups on a volume, log rotation so logs cannot fill the disk
 - [ ] Small EU VPS, domain, DNS, firewall, SSH keys only, automatic security updates
 - [ ] Nightly SQLite backup copied off the server; restore tested once
@@ -134,5 +134,6 @@ Done when: every colleague has logged in on their phone and a nightly backup exi
 - 2026-11-09: **Production settings**: HTTPS redirect and proxy header (Caddy in front, Gunicorn never exposed), HSTS starting at 1 hour without subdomains or preload, and the app refuses to start with a weak secret key when DEBUG is off.
 - 2026-11-09: **SQLite and logging for production**: `DATABASE_PATH` from the environment, WAL mode with a 5 s busy timeout and immediate transactions for several Gunicorn workers (write safety stays strict), `STATIC_ROOT` for collectstatic, warnings and errors logged to the console without 404s.
 - 2026-11-13: **WhiteNoise** (6.12.0) serves static files with fingerprinted, compressed names cached for a year. With DEBUG off, `collectstatic` must run before every start (tests use Django's plain storage instead).
+- 2026-11-13: **Gunicorn** 26.2.0 (27 was only days old): 2 workers, 30 s timeout, workers recycled after about 1000 requests, no access log (Caddy logs requests). `forwarded_allow_ips` stays at its default, because Django reads `X-Forwarded-Proto` itself; a test proves HTTPS detection works even when Gunicorn does not trust the proxy.
 - Open: deload rules of Methode 1 and 2 (Milestone 2).
 - 2026-11-05: The athlete page for building own plans moves to **Milestone 2**. Until then, plans are created in the admin.

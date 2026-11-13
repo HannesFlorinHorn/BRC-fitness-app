@@ -16,7 +16,8 @@ Small Django web app for a training group (about 10 people). Athletes log traini
 - Styling: Pico.css (a single CSS file) plus a small `static/css/custom.css` that applies the design tokens. No JS build step.
 - Static files: WhiteNoise serves them with DEBUG off, from `staticfiles/` (fingerprinted names). Run `collectstatic` before every start with DEBUG off, or every page fails with "Missing staticfiles manifest entry".
 - Settings via environment variables (`.env`, gitignored; keep `.env.example` up to date).
-- Later (not now): Gunicorn, Caddy, Docker Compose, VPS, Raspberry Pi. See `ROADMAP.md`.
+- Production server: Gunicorn, settings in `config/gunicorn.conf.py` (2 workers by default, `GUNICORN_WORKERS`). `runserver` stays for development and the training laptop.
+- Later (not now): Caddy, Docker Compose, VPS, Raspberry Pi. See `ROADMAP.md`.
 
 ## Out of scope until the roadmap says so
 
@@ -55,6 +56,7 @@ python manage.py createsuperuser
 python manage.py runserver            # http://127.0.0.1:8000
 python manage.py runserver 0.0.0.0:8000   # to test from a phone on the same Wi-Fi
 python manage.py collectstatic --noinput   # before running with DEBUG=false
+gunicorn -c config/gunicorn.conf.py        # production server (DEBUG=false), port 8000
 pytest
 python manage.py makemigrations --check   # must pass before committing
 ```
@@ -71,7 +73,7 @@ Logs: warnings and errors (server errors, Methode fallbacks, security warnings) 
 - Ask before adding any dependency. Keep `requirements.txt` pinned.
 - Never commit secrets, `.env`, `db.sqlite3` or backups.
 - Logins expire after inactivity: 30 minutes for staff accounts, 7 days for athletes, restarted by every request (`accounts/session_lifetime.py`, `STAFF_SESSION_AGE` and `SESSION_COOKIE_AGE` in settings).
-- `DEBUG`, `SECRET_KEY`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, the cookie security flags and `SECURE_SSL_REDIRECT` all come from the environment. Defaults must be safe for production, and local development overrides them in `.env`. With `DEBUG` off the app refuses to start with a weak `SECRET_KEY`. Django trusts Caddy's `X-Forwarded-Proto` header, so Gunicorn must never be reachable except through Caddy. `config/tests.py` runs `check --deploy` with production values.
+- `DEBUG`, `SECRET_KEY`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, the cookie security flags and `SECURE_SSL_REDIRECT` all come from the environment. Defaults must be safe for production, and local development overrides them in `.env`. With `DEBUG` off the app refuses to start with a weak `SECRET_KEY`. Django trusts Caddy's `X-Forwarded-Proto` header, so Gunicorn must never be reachable except through Caddy. `config/tests.py` runs `check --deploy` with production values and starts Gunicorn once to check pages, the HTTPS header and static files.
 - Mobile first: design for a 390 px wide phone, one-handed use, tap targets of at least 48 px, number inputs with `inputmode="decimal"` for weight and `inputmode="numeric"` for reps.
 - Starting a session: the athlete picks a plan (club or their own), which preloads its active exercises in plan order, or "free", which starts empty. Exercises from any plan can be added and the order swapped. Finishing removes preloaded exercises that have no sets and are not ticked. `check` exercises get a tick, never sets. The logic lives in `training/services.py`.
 - A session's date is prefilled with today and can be set to a past date (never a future one) to log a session already done.
