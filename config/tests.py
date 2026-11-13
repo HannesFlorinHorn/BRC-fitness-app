@@ -64,3 +64,24 @@ def test_database_lives_at_database_path_in_wal_mode(tmp_path):
     result = manage("shell", "-c", script, DATABASE_PATH=str(path))
     assert result.stdout.strip().endswith("wal"), result.stderr
     assert path.exists()
+
+
+def test_collectstatic_fingerprints_the_css_and_its_fonts(tmp_path):
+    # STATIC_ROOT points at a temporary folder, so the project's staticfiles/ stays untouched.
+    script = (
+        "from django.core.management import call_command;"
+        "from django.test import override_settings;"
+        "from django.contrib.staticfiles.storage import staticfiles_storage as s;"
+        f"o = override_settings(STATIC_ROOT={str(tmp_path)!r}); o.enable();"
+        "call_command('collectstatic', '--noinput', verbosity=0);"
+        "print(s.url('css/custom.css'))"
+    )
+    result = manage("shell", "-c", script)
+    assert result.returncode == 0, result.stderr
+    url = result.stdout.strip().splitlines()[-1]
+    # A new name for every CSS change, so browsers may cache each one forever.
+    assert url.startswith("/static/css/custom.") and url != "/static/css/custom.css"
+    css = (tmp_path / url.removeprefix("/static/")).read_text()
+    assert "fonts/manrope-latin-400-normal." in css
+    assert "manrope-latin-400-normal.woff2" not in css
+    assert (tmp_path / (url.removeprefix("/static/") + ".gz")).exists()
